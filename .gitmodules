@@ -1,6 +1,7 @@
 [submodule "third_party/ManifoldPlus"]
 	path = third_party/ManifoldPlus
 	url = git@github.com:hjwdzh/ManifoldPlus.git
-[submodule "third_party/CoACD"]
-	path = third_party/CoACD
-	url = git@github.com:SarahWeiii/CoACD.git
+
+[submodule "third_party/Manifold"]
+	path = third_party/Manifold
+	url = git@github.com:hjwdzh/Manifold.git

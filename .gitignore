@@ -200,3 +200,5 @@ docker/pkgs/*
 
 *.csv
 docs/*
+
+output.txt
