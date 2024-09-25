@@ -21,34 +21,36 @@ class MeshProcess:
             'info': "info/simplified.json",
             'tabletop_pose': "info/tabletop_pose.json"
         }
-        
+    
     @classmethod
-    def run(self, obj_folder, no_skip=True):
+    def run(self, input_params):
+        obj_folder, skip = input_params
+
         try:
             path = {}
             for k, v in self.relative_path.items():
                 path[k] = os.path.join(obj_folder, v)
 
             # coacd 
-            if not os.path.exists(path['urdf']) or no_skip:
+            if not os.path.exists(path['urdf']) or not skip:
                 tm_mesh = trimesh.load(path['raw'], force='mesh')
                 tm_mesh = self._normalize(tm_mesh)
                 coacd_parts = self._coacd(tm_mesh, path['coacd'])
                 self._export_urdf(coacd_parts, path['urdf'])
             
             # manifold
-            if not os.path.exists(path['manifold']) or no_skip:
+            if not os.path.exists(path['manifold']) or not skip:
                 self._manifold(path['coacd'], path['manifold'])
             
             # simplify
-            if not os.path.exists(path['simplified']) or no_skip:
+            if not os.path.exists(path['simplified']) or not skip:
                 self._simplify(path['coacd'], path['simplified'])
                 
-            if not os.path.exists(path['info']) or no_skip:
+            if not os.path.exists(path['info']) or not skip:
                 os.makedirs(os.path.dirname(path['info']), exist_ok=True)
                 self._get_obj_info(path['simplified'], path['info'])
         except:
-            print(f'Fail: {obj_folder}')
+            # print(f'Fail: {obj_folder}')
             return 
         return 
     
@@ -166,18 +168,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--folder', type=str, required=True)
     parser.add_argument('-n', '--n_process', type=int, default=10)
+    parser.add_argument('-k', '--skip', action='store_false')
     args = parser.parse_args()
     
     obj_lst = [os.path.join(args.folder, obj_code) for obj_code in os.listdir(args.folder)]
+    param_lst = [(obj_path, args.skip) for obj_path in obj_lst]
     
     if args.n_process == 1:
-        for obj_path in obj_lst:
-            MeshProcess.run(obj_path)
+        for params in param_lst:
+            MeshProcess.run(params)
     else:  
         with multiprocessing.Pool(processes=args.n_process) as pool:
             it = track(
-                pool.imap_unordered(MeshProcess.run, obj_lst), 
-                total=len(obj_lst), 
+                pool.imap_unordered(MeshProcess.run, param_lst), 
+                total=len(param_lst), 
                 description='processing', 
             )
             list(it)

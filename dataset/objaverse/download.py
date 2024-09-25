@@ -4,6 +4,14 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from src.util_file import OBJAVERSE_ROOT, load_json
 import argparse
+from glob import glob
+
+def clean_tmp():
+    fail_lst = glob(f'{OBJAVERSE_ROOT}/hf-objaverse-v1/glbs/**/**.tmp')
+    if len(fail_lst) != 0:
+        for fail_path in fail_lst:
+            os.system(f'rm {fail_path}')
+    return 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -23,6 +31,9 @@ if __name__ == '__main__':
     # Filter out specific category
     id_lst = [a['object_index'].split('.glb')[0] for a in anno if a['label'] == args.category]
 
+    # Remove previous failed objects
+    clean_tmp()
+    
     # Download
     objects = objaverse.load_objects(
         uids=id_lst,
