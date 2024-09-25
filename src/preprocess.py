@@ -3,11 +3,14 @@ import argparse
 import multiprocessing
 from rich.progress import track
 
+import numpy as np
 import trimesh 
 import coacd 
+coacd.set_log_level("error")
 
 from util_file import write_json 
 
+            
 class MeshProcess:
     relative_path = {
             'raw': "mesh/raw.obj",
@@ -20,31 +23,33 @@ class MeshProcess:
         }
         
     @classmethod
-    def run(self, obj_folder):
-        # try:
-        path = {}
-        for k, v in self.relative_path.items():
-            path[k] = os.path.join(obj_folder, v)
+    def run(self, obj_folder, no_skip=True):
+        try:
+            path = {}
+            for k, v in self.relative_path.items():
+                path[k] = os.path.join(obj_folder, v)
 
-        # coacd 
-        if not os.path.exists(path['urdf']):
-            coacd_parts = self._coacd(path['raw'], path['coacd'])
-            self._export_urdf(coacd_parts, path['urdf'])
-        
-        # manifold
-        if not os.path.exists(path['manifold']):
-            self._manifold(path['coacd'], path['manifold'])
-        
-        # simplify
-        if not os.path.exists(path['simplified']):
-            self._simplify(path['coacd'], path['simplified'])
+            # coacd 
+            if not os.path.exists(path['urdf']) or no_skip:
+                tm_mesh = trimesh.load(path['raw'], force='mesh')
+                tm_mesh = self._normalize(tm_mesh)
+                coacd_parts = self._coacd(tm_mesh, path['coacd'])
+                self._export_urdf(coacd_parts, path['urdf'])
             
-        if not os.path.exists(path['info']):
-            os.makedirs(os.path.dirname(path['info']), exist_ok=True)
-            self._get_obj_info(path['simplified'], path['info'])
-        import pdb;pdb.set_trace()
-        # except:
-        #     return 
+            # manifold
+            if not os.path.exists(path['manifold']) or no_skip:
+                self._manifold(path['coacd'], path['manifold'])
+            
+            # simplify
+            if not os.path.exists(path['simplified']) or no_skip:
+                self._simplify(path['coacd'], path['simplified'])
+                
+            if not os.path.exists(path['info']) or no_skip:
+                os.makedirs(os.path.dirname(path['info']), exist_ok=True)
+                self._get_obj_info(path['simplified'], path['info'])
+        except:
+            print(f'Fail: {obj_folder}')
+            return 
         return 
     
     @staticmethod
@@ -58,8 +63,15 @@ class MeshProcess:
         return
     
     @staticmethod
-    def _coacd(input_path, output_path):
-        tm_mesh = trimesh.load(input_path, force='mesh')
+    def _normalize(tm_mesh):
+        verts = np.array(tm_mesh.vertices)
+        center = (np.max(verts, axis=0) + np.min(verts, axis=0)) / 2
+        length = np.linalg.norm(np.max(verts, axis=0) - np.min(verts, axis=0)) / 2
+        tm_mesh.vertices = (verts - center) / length
+        return tm_mesh
+    
+    @staticmethod
+    def _coacd(tm_mesh, output_path):
         mesh = coacd.Mesh(tm_mesh.vertices, tm_mesh.faces)
         parts = coacd.run_coacd(mesh) # a list of convex hulls.
         mesh_parts = []
