@@ -11,3 +11,7 @@ pip install objaverse --upgrade --quiet
 python robust_download.py -c Daily-Used
 ```
 
+3. Save .obj file to a new folder.
+```
+python glb2obj.py
+```

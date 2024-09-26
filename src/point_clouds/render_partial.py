@@ -151,7 +151,9 @@ class WarpRender:
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--data_dir', type=str, default='/mnt/disk1/jiayichen/data/dex_obj/meshdata', help='the path to the data directory')
+    parser.add_argument('-f', '--folder', type=str, default='/mnt/disk1/jiayichen/data/dex_obj/meshdata', help='the path to the data directory')
+    parser.add_argument('-o', '--output_folder', type=str, default='kinect_table_pc', help='saved path relative to the args.folder')
+    parser.add_argument('-l', '--scale_lst', type=float, nargs='+', default=[0.06, 0.08, 0.10, 0.12], help='object scales')
     parser.add_argument('-debug', '--debug_dir', type=str, default=None, help='the path to save the images')
     parser.add_argument('-k', '--skip', action='store_false', help='whether to skip exist files (default: True)')
     parser.add_argument('-g', '--gpu', type=int, default=0, help='gpu id')
@@ -159,35 +161,29 @@ if __name__=="__main__":
     parser.add_argument('-e', '--end', type=int, default=100, help='end obj id')
     args = parser.parse_args()
     
-    scale_lst = [0.06, 0.08, 0.10, 0.12]
     device = f'cuda:{args.gpu}'
-    
-    save_folder = 'kinect_table_pc'
     
     with wp.ScopedDevice(device):
         renderer = WarpRender(device)
         
-        obj_lst = sorted(os.listdir(args.data_dir))[args.start:args.end]
+        obj_lst = sorted(os.listdir(args.folder))[args.start:args.end]
         
         for obj_code in tqdm(obj_lst):
             
-            obj_path = os.path.join(args.data_dir, obj_code, 'coacd', 'simply.obj')
+            obj_path = os.path.join(args.folder, obj_code, 'mesh/simplified.obj')
             obj_mesh = trimesh.load(obj_path)
             complete_pc, _ = trimesh.sample.sample_surface(obj_mesh, 8192)
             
-            table_pose_path = os.path.join(args.data_dir, obj_code, 'tabletop_pose.json')
+            table_pose_path = os.path.join(args.folder, obj_code, 'tabletop_pose.json')
             if not os.path.exists(table_pose_path):
                 continue
             table_pose_anno = load_json(table_pose_path)
             
-            obj_code_path = os.path.join(args.data_dir, obj_code)
-            np.save(os.path.join(obj_code_path, 'complete_pc.npy'), complete_pc.astype(np.float16))
-            
-            obj_newf_path = os.path.join(obj_code_path, save_folder)
+            obj_newf_path = os.path.join(args.folder, obj_code, args.output_folder)
             os.makedirs(obj_newf_path, exist_ok=True)
             np.save(os.path.join(obj_newf_path, 'cam_in.npy'), renderer.projection_matrixs[0])
             
-            for scale in scale_lst:
+            for scale in args.scale_lst:
                 pose_lst = table_pose_anno[str(scale)]
                 obj_scale_path = os.path.join(obj_newf_path, f'scale{str(int(scale*100)).zfill(3)}')
             

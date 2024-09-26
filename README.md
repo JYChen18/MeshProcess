@@ -13,10 +13,12 @@ pip install lxml
 2. Data preparing. The mesh should be organized as following:
 ```
 folder
-|- abc.obj
-|- def.obj
+|- abcdefg # object id
+    |_mesh
+        |_raw.obj
+|- bcdefgh  # object id
 ...
-|_ xyz.obj
+|_ qwertyu
 ```
 The guidance for some popular datasets, e.g. objaverse, are provided in `dataset`. 
 

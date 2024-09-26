@@ -1,54 +1,42 @@
 import os
 import argparse
-import multiprocessing
-from rich.progress import track
 
 import numpy as np
 import trimesh 
 import coacd 
 coacd.set_log_level("error")
 
-from util_file import write_json 
+from ..util_file import write_json, get_path_cfg
 
-            
 class MeshProcess:
-    relative_path = {
-            'raw': "mesh/raw.obj",
-            'coacd': "mesh/coacd.obj",
-            'manifold': "mesh/manifold.obj",
-            'simplified': "mesh/simplified.obj",
-            'urdf': "urdf/coacd.urdf",
-            'info': "info/simplified.json",
-            'tabletop_pose': "info/tabletop_pose.json"
-        }
-    
     @classmethod
     def run(self, input_params):
         obj_folder, skip = input_params
 
         try:
+            path_cfg = get_path_cfg('customized')
             path = {}
-            for k, v in self.relative_path.items():
+            for k, v in path_cfg.items():
                 path[k] = os.path.join(obj_folder, v)
 
             # coacd 
-            if not os.path.exists(path['urdf']) or not skip:
-                tm_mesh = trimesh.load(path['raw'], force='mesh')
+            if not os.path.exists(path['urdf_coacd']) or not skip:
+                tm_mesh = trimesh.load(path['mesh_raw'], force='mesh')
                 tm_mesh = self._normalize(tm_mesh)
-                coacd_parts = self._coacd(tm_mesh, path['coacd'])
-                self._export_urdf(coacd_parts, path['urdf'])
+                coacd_parts = self._coacd(tm_mesh, path['mesh_coacd'])
+                self._export_urdf(coacd_parts, path['urdf_coacd'])
             
             # manifold
-            if not os.path.exists(path['manifold']) or not skip:
-                self._manifold(path['coacd'], path['manifold'])
+            if not os.path.exists(path['mesh_manifold']) or not skip:
+                self._manifold(path['mesh_coacd'], path['mesh_manifold'])
             
             # simplify
-            if not os.path.exists(path['simplified']) or not skip:
-                self._simplify(path['coacd'], path['simplified'])
+            if not os.path.exists(path['mesh_simplified']) or not skip:
+                self._simplify(path['mesh_coacd'], path['mesh_simplified'])
                 
-            if not os.path.exists(path['info']) or not skip:
-                os.makedirs(os.path.dirname(path['info']), exist_ok=True)
-                self._get_obj_info(path['simplified'], path['info'])
+            if not os.path.exists(path['info_simplified']) or not skip:
+                os.makedirs(os.path.dirname(path['info_simplified']), exist_ok=True)
+                self._get_obj_info(path['mesh_simplified'], path['info_simplified'])
         except:
             # print(f'Fail: {obj_folder}')
             return 
@@ -166,22 +154,23 @@ class MeshProcess:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--folder', type=str, required=True)
     parser.add_argument('-n', '--n_process', type=int, default=10)
     parser.add_argument('-k', '--skip', action='store_false')
     args = parser.parse_args()
     
     obj_lst = [os.path.join(args.folder, obj_code) for obj_code in os.listdir(args.folder)]
-    param_lst = [(obj_path, args.skip) for obj_path in obj_lst]
+    skip_lst = [args.skip] * len(obj_lst)
     
-    if args.n_process == 1:
-        for params in param_lst:
-            MeshProcess.run(params)
-    else:  
-        with multiprocessing.Pool(processes=args.n_process) as pool:
-            it = track(
-                pool.imap_unordered(MeshProcess.run, param_lst), 
-                total=len(param_lst), 
-                description='processing', 
-            )
-            list(it)
+    
+    
+    # if args.n_process == 1:
+    #     for params in param_lst:
+    #         MeshProcess.run(params)
+    # else:  
+    #     with multiprocessing.Pool(processes=args.n_process) as pool:
+    #         it = track(
+    #             pool.imap_unordered(MeshProcess.run, param_lst), 
+    #             total=len(param_lst), 
+    #             description='processing', 
+    #         )
+    #         list(it)
