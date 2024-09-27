@@ -2,24 +2,21 @@ import os
 import argparse
 from glob import glob
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from mesh.preprocess import MeshProcess
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from util_file import get_config
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--folder', type=str, default='/mnt/disk0/objaverse/mesh_v1', help='the path to the data directory')
-    args = parser.parse_args()
+    path_cfg = get_config('customized')
     
-    raw_lst = glob(os.path.join(args.folder, '**', MeshProcess.relative_path['mesh_raw']))
-    coacd_lst = glob(os.path.join(args.folder, '**', MeshProcess.relative_path['mesh_coacd']))
-    mani_lst = glob(os.path.join(args.folder, '**', MeshProcess.relative_path['mesh_manifold']))
-    simp_lst = glob(os.path.join(args.folder, '**', MeshProcess.relative_path['mesh_simplified']))
-    info_lst = glob(os.path.join(args.folder, '**', MeshProcess.relative_path['info_simplified']))
-    
+    raw_lst = glob(os.path.join(path_cfg['processed_folder'], '**', path_cfg['tasks']['_coacd']['input_path']))
+    coacd_lst = glob(os.path.join(path_cfg['processed_folder'], '**', path_cfg['tasks']['_coacd']['output_path']))
+    mani_lst = glob(os.path.join(path_cfg['processed_folder'], '**', path_cfg['tasks']['_manifold']['output_path']))
+    simp_lst = glob(os.path.join(path_cfg['processed_folder'], '**', path_cfg['tasks']['_simplify']['output_path']))
+    print(simp_lst[0])
     print('Raw object number: ', len(raw_lst))
     print('CoACD success rates: ', len(coacd_lst) / len(raw_lst))
     print('Manifold success rates: ', len(mani_lst) / len(coacd_lst))
     print('Simplify success rates: ', len(simp_lst) / len(mani_lst))
-    print('Total success rates: ', len(info_lst) / len(raw_lst))
+    print('Total success rates: ', len(simp_lst) / len(raw_lst))
     

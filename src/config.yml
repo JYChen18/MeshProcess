@@ -1,0 +1,53 @@
+############## Global settings ##############
+n_process: 16
+skip: True
+
+############## Path prefix ##############
+# dataset_root is root_candidates[dataset_name]
+root_candidates:
+  objaverse: /mnt/disk0/objaverse
+  customized: /mnt/disk0/objaverse
+
+# output folder of processed data
+processed_folder: processed_data
+
+############## Tasks ##############
+tasks:
+  # mesh 
+  _coacd:
+    input_path: mesh/raw.obj
+    output_path: mesh/coacd.obj
+    normalize: True
+    export_urdf_path: urdf/coacd.urdf
+    # export_xml: False
+
+  _manifold:
+    input_path: mesh/coacd.obj
+    output_path: mesh/manifold.obj
+    depth: 8  # default
+
+  _simplify:
+    input_path: mesh/manifold.obj
+    output_path: mesh/simplified.obj
+    face_num: 2000
+
+  # info
+  _get_basic_info:
+    input_path: mesh/simplified.obj
+    output_path: info/simplified.json
+
+  # _get_tabletop_pose: 
+  #   input_path: mesh/simplified.obj
+  #   output_path: info/tabletop_pose.json
+
+  # point clouds
+  _get_complete_pc: 
+    input_path: mesh/simplified.obj
+    output_path: point_clouds/complete.npy
+    point_num: 4096
+
+  # _render_partial_pc: 
+  #   input_path: mesh/simplified.obj
+  #   output_path: point_clouds/kinect_partial
+
+  # splits

@@ -6,7 +6,7 @@ from glob import glob
 import objaverse
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from util_file import get_path_cfg, load_json
+from util_file import get_config, load_json
 
 
 if __name__ == '__main__':
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--n_process', type=int, default=10)
     args = parser.parse_args()
 
-    objaverse_root = get_path_cfg('objaverse')['dataset_root']
+    objaverse_root = get_config('objaverse')['dataset_root']
     
     # Load category annotation
     anno_path = os.path.join(objaverse_root, 'category_annotation.json')

@@ -1,10 +1,36 @@
 from typing import Dict, List
 import os
 import json 
+import logging 
+from filelock import FileLock
+
 import yaml
 from yaml import Loader
-import multiprocessing
-from tqdm import tqdm
+
+
+class SafeLogger:
+    def __init__(self, log_path, level=logging.ERROR):
+        logging.basicConfig(filename=log_path, 
+                            format='%(asctime)s - %(levelname)s - %(message)s', 
+                            level=level,
+                            filemode='w'
+                        )
+        self.lock = FileLock(log_path+'.lock')
+        self.logger = logging.getLogger()
+        
+    def log_error(self, str):
+        with self.lock:
+            self.logger.error(str)
+    
+    def log_warn(self, str):
+        with self.lock:
+            self.logger.warning(str)
+            
+    def log_info(self, str):
+        with self.lock:
+            self.logger.info(str)
+            
+logger = SafeLogger(os.path.join(os.path.dirname(__file__), 'logger.log'), level=logging.ERROR)
 
 def load_json(file_path):
     with open(file_path, 'r') as f:
@@ -21,20 +47,25 @@ def load_yaml(file_path) -> Dict:
         data = yaml.load(file_p, Loader=Loader)
     return data
 
-def get_path_cfg(dataset_name):
-    path_cfg = load_yaml(os.path.join(os.path.dirname(__file__), 'path_cfg.yml'))
-    path_cfg['dataset_root'] = path_cfg.pop('root_candidates')[dataset_name]
-    path_cfg['processed_folder'] = os.path.join(path_cfg['dataset_root'], path_cfg['processed_folder'])
-    return path_cfg
+def get_config(dataset_name):
+    config = load_yaml(os.path.join(os.path.dirname(__file__), 'config.yml'))
+    config['dataset_root'] = config.pop('root_candidates')[dataset_name]
+    config['processed_folder'] = os.path.join(config['dataset_root'], config['processed_folder'])
+    return config
 
-def run_multiprocess(worker, params_lst, n_process=10):
-    def handle_error(e):
-        print(f'Error occurred: {e}')  # Print the error message
 
-    with multiprocessing.Pool(processes=n_process) as pool:
-        for params in tqdm(params_lst):
-            input_params = (params, ) if not isinstance(params, tuple) else params
-            pool.apply_async(worker, input_params, error_callback=handle_error)
-        pool.close()  # Prevent any more tasks from being submitted
-        pool.join()   # Wait for the worker processes to exit
-    return 
+def ensure_path(func):
+    def wrapper(*args, **kwargs):
+        config = args[0]
+        if isinstance(config, dict) and 'output_path' in config.keys():
+            if not os.path.exists(config['input_path']):
+                logger.log_error(f"Stop task {func.__name__}: input path does not exist in {config['input_path']}")
+                raise Exception
+            if os.path.exists(config['output_path']) and config['skip']:
+                logger.log_info(f"Skip task {func.__name__}: output path already exist in {config['output_path']}")
+                return 
+            os.makedirs(os.path.dirname(config['output_path']), exist_ok=True)
+        output = func(*args, **kwargs)
+        logger.log_info(f"Finish task {func.__name__}.")
+        return output
+    return wrapper

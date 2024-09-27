@@ -6,9 +6,9 @@ from tqdm.contrib.concurrent import process_map
 import trimesh
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from util_file import get_path_cfg, load_json
+from util_file import get_config, load_json
 
-path_cfg = get_path_cfg('objaverse')
+path_cfg = get_config('objaverse')
 
 def glb2obj(glb_path, skip):
     obj_name = glb_path.split('/')[-1].replace('.glb', '')
