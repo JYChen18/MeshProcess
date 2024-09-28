@@ -3,4 +3,4 @@
 	url = git@github.com:valette/ACVD.git
 [submodule "third_party/CoACD"]
 	path = third_party/CoACD
-	url = git@github.com:SarahWeiii/CoACD.git
+	url = git@github.com:JYChen18/CoACD.git
