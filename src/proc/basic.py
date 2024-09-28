@@ -3,6 +3,7 @@ import os
 import trimesh 
 import numpy as np
 import lxml.etree as et
+import glob 
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from util_file import write_json, ensure_path
@@ -29,7 +30,11 @@ def _get_complete_pc(config):
     np.save(output_path, complete_pc.astype(np.float16))
     return 
 
-def export_urdf(urdf_path, parts):
+@ensure_path
+def _export_urdf(config):
+    input_path, output_path = config['input_path'], config['output_path']
+    
+    parts = trimesh.load(input_path, force='mesh').split()
     # open an XML tree
     root = et.Element('robot', name='root')
     
@@ -39,7 +44,7 @@ def export_urdf(urdf_path, parts):
         # Save each nearly convex mesh out to a file
         piece_name = f'convex_piece_{i}'
         piece_filename = f'convex_piece_{i}.obj'
-        piece_filepath = os.path.join(os.path.dirname(urdf_path), 'meshes', piece_filename)
+        piece_filepath = os.path.join(os.path.dirname(output_path), 'meshes', piece_filename)
         os.makedirs(os.path.dirname(piece_filepath), exist_ok=True)
         piece.export(piece_filepath)
         
@@ -91,9 +96,26 @@ def export_urdf(urdf_path, parts):
 
     # Write URDF file
     tree = et.ElementTree(root)
-    tree.write(urdf_path, pretty_print=True)
+    tree.write(output_path, pretty_print=True)
     return 
 
-def export_xml(config):
-    raise NotImplementedError
+@ensure_path
+def _remove_useless(config):
+    pass
+
+@ensure_path
+def _clean_all(config):
+    input_path, clean_path = config['input_path'], config['clean_path']
+    all_lst = glob.glob(os.path.join(os.path.abspath(clean_path), '**'), recursive=True)
+    for p in all_lst:
+        if os.path.isdir(p):
+            if not os.path.commonprefix([p, input_path]) == p:
+                os.system(f'rm -r {p}') 
+        else:
+            if not os.path.samefile(p, input_path):
+                os.system(f'rm {p}') 
+    return 
+
+# def export_xml(config):
+#     raise NotImplementedError
 

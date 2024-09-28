@@ -14,22 +14,39 @@ processed_folder: processed_data
 ############## Tasks ##############
 tasks:
   # mesh 
-  _coacd:
+  _normalize:
     input_path: mesh/raw.obj
+    output_path: mesh/normalized.obj
+
+  _coacd:
+    input_path: mesh/normalized.obj
     output_path: mesh/coacd.obj
-    normalize: True
-    export_urdf_path: urdf/coacd.urdf
-    # export_xml: False
+    delete_input: True
+
+  _export_urdf: 
+    input_path: mesh/coacd.obj
+    output_path: urdf/coacd.urdf
 
   _manifold:
     input_path: mesh/coacd.obj
     output_path: mesh/manifold.obj
-    depth: 8  # default
 
   _simplify:
     input_path: mesh/manifold.obj
-    output_path: mesh/simplified.obj
-    face_num: 2000
+    output_path: mesh/simplified.ply  # NOTE: this must be a ply
+    vert_num: 2000
+    gradation: 1.5    # This is recommanded in official repo
+    delete_input: True
+
+  _remove_useless:
+    input_path: mesh/smooth_simplified.ply
+    output_path: mesh/smooth_simplified.ply  
+    delete_input: True
+
+  _change_mesh_format: 
+    input_path: mesh/simplified.ply
+    output_path: mesh/simplified.obj  
+    delete_input: True
 
   # info
   _get_basic_info:

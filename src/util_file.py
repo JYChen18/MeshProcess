@@ -47,8 +47,8 @@ def load_yaml(file_path) -> Dict:
         data = yaml.load(file_p, Loader=Loader)
     return data
 
-def get_config(dataset_name):
-    config = load_yaml(os.path.join(os.path.dirname(__file__), 'config.yml'))
+def get_config(config_name, dataset_name):
+    config = load_yaml(os.path.join(os.path.dirname(__file__), f'configs/{config_name}.yml'))
     config['dataset_root'] = config.pop('root_candidates')[dataset_name]
     config['processed_folder'] = os.path.join(config['dataset_root'], config['processed_folder'])
     return config
@@ -57,15 +57,23 @@ def get_config(dataset_name):
 def ensure_path(func):
     def wrapper(*args, **kwargs):
         config = args[0]
-        if isinstance(config, dict) and 'output_path' in config.keys():
-            if not os.path.exists(config['input_path']):
-                logger.log_error(f"Stop task {func.__name__}: input path does not exist in {config['input_path']}")
-                raise Exception
-            if os.path.exists(config['output_path']) and config['skip']:
-                logger.log_info(f"Skip task {func.__name__}: output path already exist in {config['output_path']}")
-                return 
+        if not isinstance(config, dict) or 'output_path' not in config.keys():
+            return func(*args, **kwargs)
+        
+        if not os.path.exists(config['input_path']):
+            logger.log_error(f"Stop task {func.__name__}: input path does not exist in {config['input_path']}")
+            raise Exception
+        
+        if os.path.exists(config['output_path']) and config['skip']:
+            logger.log_info(f"Skip task {func.__name__}: output path already exist in {config['output_path']}")
+            output = None
+        else:
             os.makedirs(os.path.dirname(config['output_path']), exist_ok=True)
-        output = func(*args, **kwargs)
-        logger.log_info(f"Finish task {func.__name__}.")
+            output = func(*args, **kwargs)
+            logger.log_info(f"Finish task {func.__name__}.")
+            
+        if 'delete_input' in config and config['delete_input']:
+            os.system(f"rm {config['input_path']}")
+            
         return output
     return wrapper
