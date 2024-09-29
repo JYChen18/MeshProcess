@@ -4,9 +4,9 @@ import argparse
 from glob import glob
 
 import objaverse
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from util_file import get_config, load_json
+SRC_FOLDER = os.path.join(os.path.dirname(__file__), '../..')
+sys.path.append(SRC_FOLDER)
+from util_file import load_yaml, load_json
 
 
 if __name__ == '__main__':
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--n_worker', type=int, default=10)
     args = parser.parse_args()
 
-    objaverse_root = get_config('objaverse')['dataset_root']
+    objaverse_root = load_yaml(os.path.join(SRC_FOLDER, 'config/data/objaverse.yaml'))['root']
     
     # Load category annotation
     anno_path = os.path.join(objaverse_root, 'category_annotation.json')

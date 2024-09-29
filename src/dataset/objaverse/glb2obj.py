@@ -5,14 +5,17 @@ import argparse
 from tqdm.contrib.concurrent import process_map 
 import trimesh
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from util_file import get_config, load_json
+SRC_FOLDER = os.path.join(os.path.dirname(__file__), '../..')
+sys.path.append(SRC_FOLDER)
+from util_file import load_yaml, load_json
 
-path_cfg = get_config('main', 'objaverse')
+data_cfg = load_yaml(os.path.join(SRC_FOLDER, 'config/data/objaverse.yaml'))
+data_cfg['processed_folder'] = data_cfg['processed_folder'].replace("${data.root}", data_cfg['root'])
+task_cfg = load_yaml(os.path.join(SRC_FOLDER, 'config/task/main.yaml'))
 
 def glb2obj(glb_path, skip):
     obj_name = glb_path.split('/')[-1].replace('.glb', '')
-    out_path = os.path.join(path_cfg['processed_folder'], obj_name, path_cfg['tasks']['_normalize']['input_path'])
+    out_path = os.path.join(data_cfg['processed_folder'], obj_name, task_cfg['1-mesh_normalize']['input_path'])
     if os.path.exists(glb_path) and (not os.path.exists(out_path) or not skip):
         obj = trimesh.load(glb_path, force='mesh')
         obj.visual = trimesh.visual.ColorVisuals()  # remove material
@@ -28,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--skip', action='store_false')
     args = parser.parse_args()
     
-    raw_folder = os.path.join(path_cfg['dataset_root'], 'hf-objaverse-v1')
+    raw_folder = os.path.join(data_cfg['root'], 'hf-objaverse-v1')
     json_path = os.path.join(raw_folder, 'object-paths.json')
 
     # unzip object-paths.json.gz
