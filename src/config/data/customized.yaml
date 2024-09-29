@@ -1,0 +1,4 @@
+root: example_data
+
+# output folder of processed data
+processed_folder: ${data.root}/processed_data

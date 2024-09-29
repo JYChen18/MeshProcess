@@ -17,8 +17,8 @@ sudo apt-get update
 sudo apt install -y build-essential cmake git unzip qt5-default libqt5opengl5-dev libqt5x11extras5-dev libeigen3-dev libboost-all-dev libglew-dev libglvnd-dev
 
 git clone https://gitlab.kitware.com/vtk/vtk.git
-git checkout v9.2.0     
 cd vtk
+git checkout v9.2.0     
 mkdir build
 cd build
 cmake ..
@@ -28,7 +28,7 @@ export VTK_DIR=/usr/local/include/vtk-9.2
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ``` 
 
-2. Data preparing. The mesh should be organized as following:
+2. Data preparing. The mesh should be organized as in `example_data`:
 ```
 folder
 |- abcdefg # object id
@@ -38,14 +38,29 @@ folder
 ...
 |_ qwertyu
 ```
-The guidance for some popular datasets, e.g. objaverse, are provided in `dataset`. 
+The download guidance for some popular datasets, e.g. objaverse, are also provided in `src/dataset`. 
 
 
-3. Run scipts. 
+3. Run scipts for `example_data`. 
 ```
-# use config in src/configs/main.yml
-python src/scripts/process.py -c main
+# processing meshes
+python src/script/process.py task=main
+
+# remove processed results and only leave raw.obj
+python src/script/process.py task=clean
+
 ```
+
+## TODO
+
+1. Get xml for MuJoCo
+2. Get valid object pose on a table from MuJoCo
+3. GPU-based partial point clouds rendering 
+4. (Potential) Reduce part number of the CoACD output
+5. 
+
+## Known issues
+1. The simplified mesh would be a little bit larger than the original mesh.
 
 
 ## Acknowledgement

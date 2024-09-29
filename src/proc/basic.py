@@ -6,11 +6,11 @@ import lxml.etree as et
 import glob 
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from util_file import write_json, ensure_path
+from util_file import write_json, task_wrapper
 
 # save basic info
-@ensure_path
-def _get_basic_info(config):
+@task_wrapper
+def get_basic_info(config):
     input_path, output_path = config['input_path'], config['output_path']
     tm_mesh = trimesh.load(input_path, force='mesh')
     obb_length = tm_mesh.bounding_box_oriented.primitive.extents
@@ -22,16 +22,16 @@ def _get_basic_info(config):
     return 
 
 # save complete point cloud
-@ensure_path
-def _get_complete_pc(config):
+@task_wrapper
+def get_complete_pc(config):
     input_path, output_path, point_num = config['input_path'], config['output_path'], config['point_num']
     tm_mesh = trimesh.load(input_path, force='mesh')
     complete_pc, _ = trimesh.sample.sample_surface(tm_mesh, point_num)
     np.save(output_path, complete_pc.astype(np.float16))
     return 
 
-@ensure_path
-def _export_urdf(config):
+@task_wrapper
+def export_urdf(config):
     input_path, output_path = config['input_path'], config['output_path']
     
     parts = trimesh.load(input_path, force='mesh').split()
@@ -99,20 +99,21 @@ def _export_urdf(config):
     tree.write(output_path, pretty_print=True)
     return 
 
-@ensure_path
-def _remove_useless(config):
+@task_wrapper
+def remove_input(config):
     pass
 
-@ensure_path
-def _clean_all(config):
+@task_wrapper
+def remove_except_input(config):
     input_path, clean_path = config['input_path'], config['clean_path']
-    all_lst = glob.glob(os.path.join(os.path.abspath(clean_path), '**'), recursive=True)
+    assert os.path.isabs(input_path) and os.path.isabs(clean_path) 
+    all_lst = glob.glob(os.path.join(clean_path, '**'), recursive=True)
     for p in all_lst:
         if os.path.isdir(p):
             if not os.path.commonprefix([p, input_path]) == p:
                 os.system(f'rm -r {p}') 
         else:
-            if not os.path.samefile(p, input_path):
+            if os.path.exists(p) and not os.path.samefile(p, input_path):
                 os.system(f'rm {p}') 
     return 
 

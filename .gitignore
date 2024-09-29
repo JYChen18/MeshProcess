@@ -203,3 +203,5 @@ docs/*
 
 output.txt
 *.log.lock
+outputs/
+example_data/

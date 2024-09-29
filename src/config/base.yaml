@@ -1,0 +1,14 @@
+# parallel worker number
+n_worker: 16    
+
+# skip existing objects
+skip: True      
+
+# run only one object id for debug
+debug_id: 
+
+defaults:
+  - _self_
+  - data: customized
+  - task: main
+

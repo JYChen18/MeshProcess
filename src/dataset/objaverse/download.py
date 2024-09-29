@@ -15,7 +15,7 @@ if __name__ == '__main__':
         choices=['Human-Shape', 'Animals', 'Daily-Used', 'Furnitures',
                 'Buildings&&Outdoor', 'Transportations', 'Plants', 
                 'Food', 'Electronics', 'Poor-quality'])
-    parser.add_argument('-n', '--n_process', type=int, default=10)
+    parser.add_argument('-n', '--n_worker', type=int, default=10)
     args = parser.parse_args()
 
     objaverse_root = get_config('objaverse')['dataset_root']
@@ -38,6 +38,6 @@ if __name__ == '__main__':
     # Download
     objects = objaverse.load_objects(
         uids=id_lst,
-        download_processes=args.n_process
+        download_processes=args.n_worker
     )
 
