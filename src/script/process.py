@@ -35,9 +35,11 @@ def process_all(params):
 @hydra.main(config_path="../config", config_name="base", version_base=None)
 def main(cfg: DictConfig) -> None:
     obj_lst = os.listdir(cfg['data']['processed_folder'])
+    logger.info("#"*30)
     logger.info(f"Processing folder: {cfg['data']['processed_folder']}")
     logger.info(f"Object Number: {len(obj_lst)}")
     logger.info(f"Tasks: {list(cfg['task'].keys())}")
+    logger.info("#"*30)
     
     if cfg['debug_id'] is not None:
         process_all((cfg, cfg['debug_id']))

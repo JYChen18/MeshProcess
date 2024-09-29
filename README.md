@@ -1,17 +1,24 @@
 # MeshProcess 
 
-1. Installation.
-```
-conda create -n meshproc python=3.10    
-conda activate meshproc
-```
+## Dependence
+1. The code is currently only tested on Linux Ubuntu.
+2. [ACVD](https://github.com/valette/ACVD).
+3. [CoACD](https://github.com/JYChen18/CoACD).
 
-To install the third-party repositories, see the compiling guidance in [ACVD](https://github.com/valette/ACVD/tree/master?tab=readme-ov-file#simple-compilation-howto-under-linux) and [CoACD](https://github.com/SarahWeiii/CoACD?tab=readme-ov-file#3-compile). 
+## Installation.
+1. clone the code and create conda environments.
 ```
 git submodule update --init --recursive 
+
+conda create -n meshproc python=3.10    
+conda activate meshproc
+pip install trimesh
+pip install hydra-core
+pip install lxml
 ```
 
-Detailed guidance for installing the VTK dependence for ACVD:
+2. Build the third-party packages, [ACVD](https://github.com/valette/ACVD/tree/master?tab=readme-ov-file#simple-compilation-howto-under-linux).
+and [CoACD](https://github.com/SarahWeiii/CoACD?tab=readme-ov-file#3-compile), according to the official repositories. For ACVD, here is a guidance for installing the [VTK](https://www.vtk.org/) dependence:
 ```
 sudo apt-get update
 sudo apt install -y build-essential cmake git unzip qt5-default libqt5opengl5-dev libqt5x11extras5-dev libeigen3-dev libboost-all-dev libglew-dev libglvnd-dev
@@ -28,26 +35,20 @@ export VTK_DIR=/usr/local/include/vtk-9.2
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ``` 
 
-2. Data preparing. The mesh should be organized as in `example_data`:
-```
-folder
-|- abcdefg # object id
-    |_mesh
-        |_raw.obj
-|- bcdefgh  # object id
-...
-|_ qwertyu
-```
+2. Data preparing. The mesh should be organized as in `example_data`.
 The download guidance for some popular datasets, e.g. objaverse, are also provided in `src/dataset`. 
 
 
 3. Run scipts for `example_data`. 
 ```
 # processing meshes
-python src/script/process.py task=main
+python src/script/process.py data=example task=main
+
+# Get statistic
+python src/script/statistic.py data=example task=main
 
 # remove processed results and only leave raw.obj
-python src/script/process.py task=clean
+python src/script/process.py data=example task=clean
 
 ```
 
@@ -60,16 +61,4 @@ python src/script/process.py task=clean
 5. 
 
 ## Known issues
-1. The simplified mesh would be a little bit larger than the original mesh.
-
-
-## Acknowledgement
-
-This work is built on many amazing research works and open-source softwares:
-1. [ACVD](https://github.com/valette/ACVD)
-2. [CoACD](https://github.com/SarahWeiii/CoACD)
-3. [OpenVDB](https://www.openvdb.org/)
-4. [Trimesh](https://github.com/mikedh/trimesh)
-5. [Objaverse](https://objaverse.allenai.org/)
-
-Thanks for their excellent work and great contribution.
+1. The output mesh of the OpenVDB for manifold repairing would be a little bit larger (~1%) than the input mesh.

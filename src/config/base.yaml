@@ -9,6 +9,6 @@ debug_id:
 
 defaults:
   - _self_
-  - data: customized
+  - data: example
   - task: main
 
