@@ -26,8 +26,8 @@ pip install hydra-core
 pip install lxml
 ```
 
-3. Build the third-party packages, [ACVD](https://github.com/valette/ACVD/tree/master?tab=readme-ov-file#simple-compilation-howto-under-linux)
-and [CoACD](https://github.com/SarahWeiii/CoACD?tab=readme-ov-file#3-compile), according to the official repositories. For ACVD, here is a guidance for installing the [VTK](https://www.vtk.org/) dependence:
+3. Build the third-party packages according to the guidance in [ACVD](https://github.com/valette/ACVD/tree/master?tab=readme-ov-file#simple-compilation-howto-under-linux)
+and [CoACD](https://github.com/SarahWeiii/CoACD?tab=readme-ov-file#3-compile). For ACVD, here is a guidance for installing the [VTK](https://www.vtk.org/) dependence:
 ```
 sudo apt-get update
 sudo apt install -y build-essential cmake git unzip qt5-default libqt5opengl5-dev libqt5x11extras5-dev libeigen3-dev libboost-all-dev libglew-dev libglvnd-dev
@@ -47,21 +47,19 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 ## Mesh Data Preparing
 1. The meshes should be organized similarly as in `example_data`. 
 
-2. The downloading guidance for [objaverse-1.0](https://objaverse.allenai.org/objaverse-1.0/) is in `src/dataset/objaverse/README.md`.
+2. The downloading guidance for [objaverse-1.0](https://objaverse.allenai.org/objaverse-1.0/) is in `src/dataset/objaverse_v1/README.md`.
 
 ## Running
-1. Processing meshes for `example_data`. The logs will be saved to `outputs`.
+1. Processing meshes for `example_data`. The processed results will be saved in `example_data/output` and the logs will be saved to `outputs`.
 ```
 python src/script/process.py data=example task=main
+# python src/script/process.py data=example task=simplified
 ```
 2. Get statistic.
 ```
 python src/script/statistic.py data=example task=main
 ```
-3. Remove all processed results and only leave `raw.obj`
-```
-python src/script/process.py data=example task=clean
-```
+
 
 ## TODO
 

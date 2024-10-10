@@ -1,0 +1,5 @@
+root: /home/jiayichen/.objaverse
+
+input_template: ${data.root}/hf-objaverse-v1/organized_glbs/**.glb
+
+output_template: ${data.root}/hf-objaverse-v1/processed_data/**

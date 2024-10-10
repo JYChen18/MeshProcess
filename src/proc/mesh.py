@@ -46,12 +46,15 @@ def mesh_simplify(config):
     if quiet:
         command += ' > /dev/null 2>&1'
     os.system(command)
+    os.system(f"rm {os.path.join(os.path.dirname(output_path), 'smooth_'+os.path.basename(output_path))}")
     return
 
 
 @task_wrapper
 def mesh_change_format(config):
-    input_path, output_path = config['input_path'], config['output_path']
+    input_path, output_path, keep_material = config['input_path'], config['output_path'], config['keep_material']
     tm_mesh = trimesh.load(input_path, force='mesh')
+    if not keep_material:
+        tm_mesh.visual = trimesh.visual.ColorVisuals()  
     tm_mesh.export(output_path)
     return 

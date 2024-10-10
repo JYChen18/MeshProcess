@@ -1,0 +1,24 @@
+1-mesh_change_format:
+  input_path: ${data.input_template}
+  output_path: ${data.output_template}_raw.obj  
+  keep_material: False
+
+1-mesh_manifold:
+  input_path: ${data.output_template}_raw.obj
+  output_path: ${data.output_template}_manifold.obj
+  delete_input: True
+  quiet: True
+
+1-mesh_simplify:
+  input_path: ${data.output_template}_manifold.obj
+  output_path: ${data.output_template}_simplified.ply  # NOTE: this must be a ply
+  vert_num: 2000
+  gradation: 1.5    # This is recommanded in official repo
+  delete_input: True
+  quiet: True
+
+2-mesh_change_format: 
+  input_path: ${data.output_template}_simplified.ply
+  output_path: ${data.output_template}_simplified.obj  
+  keep_material: False
+  delete_input: True

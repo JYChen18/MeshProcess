@@ -1,60 +1,68 @@
 # Processing mesh
-# NOTE: prefix 1- is only used for avoiding duplicated task names
+# NOTE: prefix 1- and 2- is used for avoiding duplicated task names
+1-mesh_change_format:
+  input_path: ${data.input_template}
+  output_path: ${data.output_template}/mesh/raw.obj  
+  keep_material: True
+
 1-mesh_normalize:
-  input_path: mesh/raw.obj
-  output_path: mesh/normalized.obj
+  input_path: ${data.output_template}/mesh/raw.obj
+  output_path: ${data.output_template}/mesh/normalized.obj
 
 1-mesh_convex_decomp:
-  input_path: mesh/normalized.obj
-  output_path: mesh/coacd.obj
+  input_path: ${data.output_template}/mesh/normalized.obj
+  output_path: ${data.output_template}/mesh/coacd.obj
   delete_input: True
   quiet: True
 
 1-export_urdf: 
-  input_path: mesh/coacd.obj
-  output_path: urdf/coacd.urdf
+  input_path: ${data.output_template}/mesh/coacd.obj
+  export_mesh: True
+  output_path: ${data.output_template}/urdf/coacd.urdf
+
+1-export_mjcf: 
+  input_path: ${data.output_template}/mesh/coacd.obj
+  export_mesh: False
+  output_path: ${data.output_template}/urdf/coacd.xml
 
 1-mesh_manifold:
-  input_path: mesh/coacd.obj
-  output_path: mesh/manifold.obj
+  input_path: ${data.output_template}/mesh/coacd.obj
+  output_path: ${data.output_template}/mesh/manifold.obj
   quiet: True
 
 1-mesh_simplify:
-  input_path: mesh/manifold.obj
-  output_path: mesh/simplified.ply  # NOTE: this must be a ply
+  input_path: ${data.output_template}/mesh/manifold.obj
+  output_path: ${data.output_template}/mesh/simplified.ply  # NOTE: this must be a ply
   vert_num: 2000
   gradation: 1.5    # This is recommanded in official repo
   delete_input: True
   quiet: True
 
-1-remove_input:
-  input_path: mesh/smooth_simplified.ply
-  delete_input: True
-  check_input: False
-
-1-mesh_change_format: 
-  input_path: mesh/simplified.ply
-  output_path: mesh/simplified.obj  
+2-mesh_change_format: 
+  input_path: ${data.output_template}/mesh/simplified.ply
+  output_path: ${data.output_template}/mesh/simplified.obj  
+  keep_material: False
   delete_input: True
 
 # Processing info
 1-get_basic_info:
-  input_path: mesh/simplified.obj
-  output_path: info/simplified.json
-
-# get_tabletop_pose: # TODO
-#   input_path: mesh/simplified.obj
-#   output_path: info/tabletop_pose.json
+  input_path: ${data.output_template}/mesh/simplified.obj
+  output_path: ${data.output_template}/info/simplified.json
 
 # Processing point clouds
 1-get_complete_pc: 
-  input_path: mesh/simplified.obj
-  output_path: point_clouds/complete.npy
+  input_path: ${data.output_template}/mesh/simplified.obj
+  output_path: ${data.output_template}/point_clouds/complete.npy
   point_num: 4096
 
-# render_partial_pc: # TODO
+# TODO 
+
+# get_tabletop_pose:
+#   input_path: mesh/simplified.obj
+#   output_path: info/tabletop_pose.json
+
+# render_partial_pc:
 #   input_path: mesh/simplified.obj
 #   output_path: point_clouds/kinect_partial
 
-# Processing splits
 

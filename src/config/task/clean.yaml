@@ -1,3 +1,0 @@
-1-remove_except_input:
-  input_path: mesh/raw.obj  
-  clean_path: ./
