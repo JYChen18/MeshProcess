@@ -51,7 +51,7 @@
 
 1-get_tabletop_pose:
   input_path: ${data.output_template}/urdf/coacd.xml
-  output_path: ${data.output_template}/info/tabletop_pose.npy
+  output_path: ${data.output_template}/info/tabletop_pose.json
   # debug_vis_path: ${data.output_template}/info/debug/pose.gif # Very slow!
   max_try_num: 20    # 20 is already large enough for non-duplicated poses
   remove_duplicated: True

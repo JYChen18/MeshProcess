@@ -205,3 +205,4 @@ output.txt
 *.log.lock
 outputs/
 example_data/
+MUJOCO_LOG.TXT

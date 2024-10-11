@@ -8,7 +8,7 @@ import imageio
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils.sample import even_sample_points_on_sphere
-from utils.util_file import task_wrapper
+from utils.util_file import task_wrapper, write_json
 from utils.rotation import batched_quat_delta
 
 
@@ -119,6 +119,6 @@ def get_tabletop_pose(config):
         pose_array[..., 2] *= 1 / scale  # Save the corresponding pose of scale = 1.0.
         if remove_duplicated:
             pose_array = remove_duplicated_pose(pose_array)
-        np.save(output_path, pose_array)
+        write_json(pose_array.tolist(), output_path)
 
     return
