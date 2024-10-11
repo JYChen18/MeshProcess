@@ -12,7 +12,7 @@ os.environ["DISPLAY"] = ":98"# useless?
 import cv2
 from tqdm import tqdm
 
-from util_file import load_json
+from utils.util_file import load_json
 
 def create_view_matrix(position, target):
     # position: the position of the camera

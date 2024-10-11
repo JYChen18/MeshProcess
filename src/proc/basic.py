@@ -1,122 +1,149 @@
 import sys
-import os 
-import trimesh 
+import os
+import trimesh
 import numpy as np
 import lxml.etree as et
-import glob 
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from util_file import write_json, task_wrapper
+from utils.util_file import write_json, task_wrapper
+
 
 # save basic info
 @task_wrapper
 def get_basic_info(config):
-    input_path, output_path = config['input_path'], config['output_path']
-    tm_mesh = trimesh.load(input_path, force='mesh')
+    input_path, output_path = config["input_path"], config["output_path"]
+    tm_mesh = trimesh.load(input_path, force="mesh")
     obb_length = tm_mesh.bounding_box_oriented.primitive.extents
     gravity_center = tm_mesh.center_mass
-    write_json({'gravity_center': gravity_center.tolist(),
-                'obb': obb_length.tolist(),
-                'density': tm_mesh.density * 1000,
-                'mass': tm_mesh.mass,
-                },
-               output_path)
-    return 
+    write_json(
+        {
+            "gravity_center": gravity_center.tolist(),
+            "obb": obb_length.tolist(),
+            "scale": 1.0,
+            "density": tm_mesh.density * 1000,
+            "mass": tm_mesh.mass,
+        },
+        output_path,
+    )
+    return
+
 
 # save complete point cloud
 @task_wrapper
 def get_complete_pc(config):
-    input_path, output_path, point_num = config['input_path'], config['output_path'], config['point_num']
-    tm_mesh = trimesh.load(input_path, force='mesh')
+    input_path, output_path, point_num = (
+        config["input_path"],
+        config["output_path"],
+        config["point_num"],
+    )
+    tm_mesh = trimesh.load(input_path, force="mesh")
     complete_pc, _ = trimesh.sample.sample_surface(tm_mesh, point_num)
     np.save(output_path, complete_pc.astype(np.float16))
-    return 
+    return
+
 
 @task_wrapper
 def export_urdf(config):
-    input_path, export_mesh, output_path = config['input_path'], config['export_mesh'], config['output_path']
-    
-    parts = trimesh.load(input_path, force='mesh').split()
-    root = et.Element('robot', name='root')
-    
+    input_path, export_mesh, output_path = (
+        config["input_path"],
+        config["export_mesh"],
+        config["output_path"],
+    )
+
+    parts = trimesh.load(input_path, force="mesh").split()
+    root = et.Element("robot", name="root")
+
     prev_link_name = None
     for i, piece in enumerate(parts):
-        piece_name = f'convex_piece_{i}'
-        piece_filename = f'meshes/convex_piece_{i}.obj'
+        piece_name = f"convex_piece_{i}"
+        piece_filename = f"meshes/convex_piece_{i}.obj"
         piece_filepath = os.path.join(os.path.dirname(output_path), piece_filename)
         if export_mesh:
             os.makedirs(os.path.dirname(piece_filepath), exist_ok=True)
             piece.export(piece_filepath)
 
-        link_name = 'link_{}'.format(piece_name)
-        I = [['{:.2E}'.format(y) for y in x]  # NOQA
-            for x in piece.moment_inertia]
-        link = et.SubElement(root, 'link', name=link_name)
-        inertial = et.SubElement(link, 'inertial')
-        et.SubElement(inertial, 'origin', xyz="0 0 0", rpy="0 0 0")
+        link_name = "link_{}".format(piece_name)
+        I = [["{:.2E}".format(y) for y in x] for x in piece.moment_inertia]  # NOQA
+        link = et.SubElement(root, "link", name=link_name)
+        inertial = et.SubElement(link, "inertial")
+        et.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
         # et.SubElement(inertial, 'mass', value='{:.2E}'.format(piece.mass))
-        et.SubElement(inertial, 'inertia', ixx=I[0][0], ixy=I[0][1], ixz=I[0][2],
-            iyy=I[1][1], iyz=I[1][2], izz=I[2][2])
-        
+        et.SubElement(
+            inertial,
+            "inertia",
+            ixx=I[0][0],
+            ixy=I[0][1],
+            ixz=I[0][2],
+            iyy=I[1][1],
+            iyz=I[1][2],
+            izz=I[2][2],
+        )
+
         # Visual Information
-        visual = et.SubElement(link, 'visual')
-        et.SubElement(visual, 'origin', xyz="0 0 0", rpy="0 0 0")
-        geometry = et.SubElement(visual, 'geometry')
-        et.SubElement(geometry, 'mesh', filename=piece_filename, scale="1.0 1.0 1.0")
-        
+        visual = et.SubElement(link, "visual")
+        et.SubElement(visual, "origin", xyz="0 0 0", rpy="0 0 0")
+        geometry = et.SubElement(visual, "geometry")
+        et.SubElement(geometry, "mesh", filename=piece_filename, scale="1.0 1.0 1.0")
+
         # Collision Information
-        collision = et.SubElement(link, 'collision')
-        et.SubElement(collision, 'origin', xyz="0 0 0", rpy="0 0 0")
-        geometry = et.SubElement(collision, 'geometry')
-        et.SubElement(geometry, 'mesh', filename=piece_filename, scale="1.0 1.0 1.0")
+        collision = et.SubElement(link, "collision")
+        et.SubElement(collision, "origin", xyz="0 0 0", rpy="0 0 0")
+        geometry = et.SubElement(collision, "geometry")
+        et.SubElement(geometry, "mesh", filename=piece_filename, scale="1.0 1.0 1.0")
 
         # Create rigid joint to previous link
         if prev_link_name is not None:
-            joint_name = '{}_joint'.format(link_name)
-            joint = et.SubElement(root,
-                                'joint',
-                                name=joint_name,
-                                type='fixed')
-            et.SubElement(joint, 'origin', xyz="0 0 0", rpy="0 0 0")
-            et.SubElement(joint, 'parent', link=prev_link_name)
-            et.SubElement(joint, 'child', link=link_name)
+            joint_name = "{}_joint".format(link_name)
+            joint = et.SubElement(root, "joint", name=joint_name, type="fixed")
+            et.SubElement(joint, "origin", xyz="0 0 0", rpy="0 0 0")
+            et.SubElement(joint, "parent", link=prev_link_name)
+            et.SubElement(joint, "child", link=link_name)
 
         prev_link_name = link_name
 
     # Write URDF file
     tree = et.ElementTree(root)
     tree.write(output_path, pretty_print=True)
-    
-    return 
+
+    return
 
 
 @task_wrapper
 def export_mjcf(config):
-    input_path, export_mesh, output_path = config['input_path'], config['export_mesh'], config['output_path']
-    
-    parts = trimesh.load(input_path, force='mesh').split()
-    
+    input_path, export_mesh, output_path = (
+        config["input_path"],
+        config["export_mesh"],
+        config["output_path"],
+    )
+
+    parts = trimesh.load(input_path, force="mesh").split()
+
     asset_mesh_xml = ""
     body_mesh_xml = ""
-        
+
     for i, piece in enumerate(parts):
-        piece_name = f'convex_piece_{i}'
-        piece_filename = f'meshes/convex_piece_{i}.obj'
+        piece_name = f"convex_piece_{i}"
+        piece_filename = f"meshes/convex_piece_{i}.obj"
         piece_filepath = os.path.join(os.path.dirname(output_path), piece_filename)
         if export_mesh:
             os.makedirs(os.path.dirname(piece_filepath), exist_ok=True)
             piece.export(piece_filepath)
 
-        asset_mesh_xml += f'<mesh name="{piece_name}" file="{piece_filepath}"  scale="1.0 1.0 1.0"/>'
-        body_mesh_xml += f'<geom mesh="{piece_name}" name="object_collisionn_{i}" class="collision"/>'
-    
+        asset_mesh_xml += f'<mesh name="{piece_name}" file="{piece_filename}"  scale="1.0 1.0 1.0"/>\n'
+        body_mesh_xml += f'<geom mesh="{piece_name}" name="object_collision_{i}" class="collision"/>\n'
+
     # Write MJCF file
-    model_xml = XML_TEMPLATE.replace("<object_mesh_to_replace></object_mesh_to_replace>",asset_mesh_xml)
-    model_xml = model_xml.replace("<object_body_to_replace></object_body_to_replace>",body_mesh_xml)
-    with open(output_path, 'w') as f:
+    model_xml = XML_TEMPLATE.replace(
+        "<object_mesh_to_replace></object_mesh_to_replace>", asset_mesh_xml
+    )
+    model_xml = model_xml.replace(
+        "<object_body_to_replace></object_body_to_replace>", body_mesh_xml
+    )
+    with open(output_path, "w") as f:
         f.write(model_xml)
-        
-    return 
+
+    return
+
 
 @task_wrapper
 def remove_input(config):
@@ -124,11 +151,9 @@ def remove_input(config):
 
 
 XML_TEMPLATE = """<mujoco model="scene">
-    <!-- <compiler angle="radian" meshdir="assets" autolimits="true"/> -->
-    
     <option cone="elliptic" impratio="10"/>
     <statistic center="0.4 0 0.4" extent="1"/>
-    <compiler autolimits="true" angle="radian"/>
+    <compiler autolimits="true" angle="radian" meshdir="."/>
     <option impratio="10" integrator="implicitfast" cone="elliptic" noslip_iterations="2"/>
     
     <default>
@@ -136,7 +161,7 @@ XML_TEMPLATE = """<mujoco model="scene">
         <geom group="2" type="mesh" contype="0" conaffinity="0"/>
         </default>
         <default class="collision">
-        <geom group="3" type="mesh"/>
+        <geom group="2" type="mesh" condim="4"/>
         </default>
     </default>
     

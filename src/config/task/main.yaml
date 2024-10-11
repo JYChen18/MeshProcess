@@ -8,11 +8,11 @@
 1-mesh_normalize:
   input_path: ${data.output_template}/mesh/raw.obj
   output_path: ${data.output_template}/mesh/normalized.obj
+  delete_input: True
 
 1-mesh_convex_decomp:
   input_path: ${data.output_template}/mesh/normalized.obj
   output_path: ${data.output_template}/mesh/coacd.obj
-  delete_input: True
   quiet: True
 
 1-export_urdf: 
@@ -49,6 +49,13 @@
   input_path: ${data.output_template}/mesh/simplified.obj
   output_path: ${data.output_template}/info/simplified.json
 
+1-get_tabletop_pose:
+  input_path: ${data.output_template}/urdf/coacd.xml
+  output_path: ${data.output_template}/info/tabletop_pose.npy
+  # debug_vis_path: ${data.output_template}/info/debug/pose.gif # Very slow!
+  max_try_num: 20    # 20 is already large enough for non-duplicated poses
+  remove_duplicated: True
+
 # Processing point clouds
 1-get_complete_pc: 
   input_path: ${data.output_template}/mesh/simplified.obj
@@ -56,10 +63,6 @@
   point_num: 4096
 
 # TODO 
-
-# get_tabletop_pose:
-#   input_path: mesh/simplified.obj
-#   output_path: info/tabletop_pose.json
 
 # render_partial_pc:
 #   input_path: mesh/simplified.obj
