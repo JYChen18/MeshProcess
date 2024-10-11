@@ -47,12 +47,13 @@ def mesh_remove_small_piece(config):
 
 @task_wrapper
 def mesh_manifold(config):
-    input_path, output_path, quiet = (
+    input_path, output_path, level_set, quiet = (
         config["input_path"],
         config["output_path"],
+        config["level_set"],
         config["quiet"],
     )
-    command = f"third_party/CoACD/build/main -i {input_path} -ro {output_path} -pm on"
+    command = f"third_party/CoACD/build/main -i {input_path} -ro {output_path} -pm on --dualmc-threshold {level_set}"
     if quiet:
         command += " > /dev/null 2>&1"
     os.system(command)

@@ -34,6 +34,7 @@
 1-mesh_manifold:
   input_path: ${data.output_template}/mesh/coacd.obj
   output_path: ${data.output_template}/mesh/manifold.obj
+  level_set: 0.1
   quiet: True
 
 1-mesh_simplify:

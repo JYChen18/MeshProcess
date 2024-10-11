@@ -6,6 +6,7 @@
 1-mesh_manifold:
   input_path: ${data.output_template}_raw.obj
   output_path: ${data.output_template}_manifold.obj
+  level_set: 0.1
   delete_input: True
   quiet: True
 
