@@ -34,6 +34,18 @@ def mesh_convex_decomp(config):
 
 
 @task_wrapper
+def mesh_remove_small_piece(config):
+    input_path, output_path, min_volume = config["input_path"], config["output_path"], config['min_volume']
+    parts = trimesh.load(input_path, force='mesh').split()
+    for part in parts:
+        if part.volume < min_volume:
+            parts.remove(part)
+    new_mesh = trimesh.util.concatenate(parts)
+    new_mesh.export(output_path)
+    return
+
+
+@task_wrapper
 def mesh_manifold(config):
     input_path, output_path, quiet = (
         config["input_path"],

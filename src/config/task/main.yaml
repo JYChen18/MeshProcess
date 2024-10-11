@@ -12,8 +12,14 @@
 
 1-mesh_convex_decomp:
   input_path: ${data.output_template}/mesh/normalized.obj
-  output_path: ${data.output_template}/mesh/coacd.obj
+  output_path: ${data.output_template}/mesh/coacd_raw.obj
   quiet: True
+
+1-mesh_remove_small_piece:
+  input_path: ${data.output_template}/mesh/coacd_raw.obj
+  output_path: ${data.output_template}/mesh/coacd.obj
+  min_volume: 1e-5
+  delete_input: True
 
 1-export_urdf: 
   input_path: ${data.output_template}/mesh/coacd.obj
@@ -45,16 +51,16 @@
   delete_input: True
 
 # Processing info
-1-get_basic_info:
-  input_path: ${data.output_template}/mesh/simplified.obj
-  output_path: ${data.output_template}/info/simplified.json
-
 1-get_tabletop_pose:
   input_path: ${data.output_template}/urdf/coacd.xml
   output_path: ${data.output_template}/info/tabletop_pose.json
   # debug_vis_path: ${data.output_template}/info/debug/pose.gif # Very slow!
   max_try_num: 20    # 20 is already large enough for non-duplicated poses
   remove_duplicated: True
+
+1-get_basic_info:
+  input_path: ${data.output_template}/mesh/simplified.obj
+  output_path: ${data.output_template}/info/simplified.json
 
 # Processing point clouds
 1-get_complete_pc: 
