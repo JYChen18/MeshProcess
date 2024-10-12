@@ -20,7 +20,7 @@ def get_basic_info(config):
             "gravity_center": gravity_center.tolist(),
             "obb": obb_length.tolist(),
             "scale": 1.0,
-            "density": tm_mesh.density * 1000,
+            "density": tm_mesh.density,
             "mass": tm_mesh.mass,
         },
         output_path,
