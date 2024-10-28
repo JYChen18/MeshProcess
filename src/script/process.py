@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from proc.mesh import *
 from proc.basic import *
-from proc.tabletop_pose import get_tabletop_pose
+from proc.tabletop_pose import *
 
 logger = logging.getLogger("MeshProcess")
 

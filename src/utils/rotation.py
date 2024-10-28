@@ -95,6 +95,37 @@ def batched_quat_delta(q0, q1):
     return batched_quat_to_axisangle(batched_quat_multiply(batched_quat_inv(q0), q1))
 
 
+def batched_quat_to_mat(q):
+    """Convert rotations given as quaternions to rotation matrices.
+
+    Args:
+        quaternions (np.ndarray): A batch of quaternions of shape (..., 4) where each quaternion is [w, x, y, z].
+
+    Returns:
+        Rotation matrices as array of shape (..., 3, 3).
+    """
+
+    r, i, j, k = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+    two_s = 2.0 / np.sum(q * q, axis=-1)
+
+    o = np.stack(
+        (
+            1 - two_s * (j * j + k * k),
+            two_s * (i * j - k * r),
+            two_s * (i * k + j * r),
+            two_s * (i * j + k * r),
+            1 - two_s * (i * i + k * k),
+            two_s * (j * k - i * r),
+            two_s * (i * k - j * r),
+            two_s * (j * k + i * r),
+            1 - two_s * (i * i + j * j),
+        ),
+        axis=-1,
+    )
+
+    return o.reshape(*q.shape[:-1], 3, 3)
+
+
 if __name__ == "__main__":
     q1 = np_normalize(np.array([0.07210599, 0.20452067, 0.12467231, 0.96820909]))
     q2 = np_normalize(np.array([0.97031647, 0.13278606, 0.19933981, 0.03342843]))

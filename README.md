@@ -66,4 +66,4 @@ python src/script/statistic.py data=example task=main
 
 1. GPU-based partial point clouds rendering.
 2. (Potential) Reduce part number of the CoACD output.
-3. Filtering out similar objects.
+

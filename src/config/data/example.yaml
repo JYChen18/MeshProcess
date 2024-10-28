@@ -3,3 +3,5 @@ root: example_data
 input_template: ${data.root}/input/**.glb
 
 output_template: ${data.root}/output/**
+
+output_split: ${data.root}/splits

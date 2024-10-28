@@ -14,6 +14,7 @@
   input_path: ${data.output_template}/mesh/normalized.obj
   output_path: ${data.output_template}/mesh/coacd_raw.obj
   quiet: True
+  additional_args: --decimate
 
 1-mesh_remove_small_piece:
   input_path: ${data.output_template}/mesh/coacd_raw.obj
@@ -68,6 +69,14 @@
   input_path: ${data.output_template}/mesh/simplified.obj
   output_path: ${data.output_template}/point_clouds/complete.npy
   point_num: 4096
+
+
+1-get_tabletop_scale:
+  input_path: ${data.output_template}/info/tabletop_pose.json
+  pc_path: ${data.output_template}/point_clouds/complete.npy
+  output_path: ${data.output_template}/info/tabletop_scale.json
+  width_max: 0.15
+  height_min: 0.04
 
 # TODO 
 

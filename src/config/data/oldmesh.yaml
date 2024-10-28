@@ -1,0 +1,7 @@
+root: /mnt/disk1/jiayichen/data/dex_obj/meshdata
+
+input_template: ${data.root}/**/coacd/decomposed.obj
+
+output_template: ${data.root}/../new_meshdata/**
+
+output_split: ${data.root}/../new_meshdata_splits
