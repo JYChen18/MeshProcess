@@ -21,32 +21,26 @@ def mesh_normalize(config):
 
 @task_wrapper
 def mesh_convex_decomp(config):
-    input_path, output_path, quiet, additional_args = (
+    (
+        input_path,
+        output_path,
+        part_output_folder_path,
+        part_output_filename,
+        quiet,
+        additional_args,
+    ) = (
         config["input_path"],
         config["output_path"],
+        config["part_output_folder_path"],
+        config["part_output_filename"],
         config["quiet"],
         config["additional_args"],
     )
-    command = f"third_party/CoACD/build/main -i {input_path} -o {output_path} {additional_args}"
+    os.makedirs(part_output_folder_path, exist_ok=True)
+    command = f"third_party/CoACD/build/main -i {input_path} -o {output_path} -pf {part_output_folder_path} -pn {part_output_filename} {additional_args}"
     if quiet:
         command += " > /dev/null 2>&1"
     os.system(command)
-    return
-
-
-@task_wrapper
-def mesh_remove_small_piece(config):
-    input_path, output_path, min_volume = (
-        config["input_path"],
-        config["output_path"],
-        config["min_volume"],
-    )
-    parts = trimesh.load(input_path, force="mesh").split()
-    for part in parts:
-        if part.volume < min_volume:
-            parts.remove(part)
-    new_mesh = trimesh.util.concatenate(parts)
-    new_mesh.export(output_path)
     return
 
 

@@ -12,24 +12,18 @@
 
 1-mesh_convex_decomp:
   input_path: ${data.output_template}/mesh/normalized.obj
-  output_path: ${data.output_template}/mesh/coacd_raw.obj
-  quiet: True
-  additional_args: --decimate
-
-1-mesh_remove_small_piece:
-  input_path: ${data.output_template}/mesh/coacd_raw.obj
   output_path: ${data.output_template}/mesh/coacd.obj
-  min_volume: 1e-5
-  delete_input: True
+  part_output_folder_path: ${data.output_template}/urdf/meshes
+  part_output_filename: convex_piece
+  quiet: True
+  additional_args: -mv 1e-5 --decimate
 
 1-export_urdf: 
-  input_path: ${data.output_template}/mesh/coacd.obj
-  export_mesh: True
+  input_path: ${data.output_template}/urdf/meshes
   output_path: ${data.output_template}/urdf/coacd.urdf
 
 1-export_mjcf: 
-  input_path: ${data.output_template}/mesh/coacd.obj
-  export_mesh: False
+  input_path: ${data.output_template}/urdf/meshes
   output_path: ${data.output_template}/urdf/coacd.xml
 
 1-mesh_manifold:

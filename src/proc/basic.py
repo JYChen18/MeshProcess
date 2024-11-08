@@ -44,40 +44,36 @@ def get_complete_pc(config):
 
 @task_wrapper
 def export_urdf(config):
-    input_path, export_mesh, output_path = (
+    input_path, output_path = (
         config["input_path"],
-        config["export_mesh"],
         config["output_path"],
     )
 
-    parts = trimesh.load(input_path, force="mesh").split()
     root = et.Element("robot", name="root")
 
+    piece_names = os.listdir(input_path)
+    commonprefix = os.path.commonprefix([input_path, output_path])
+
     prev_link_name = None
-    for i, piece in enumerate(parts):
-        piece_name = f"convex_piece_{i}"
-        piece_filename = f"meshes/convex_piece_{i}.obj"
-        piece_filepath = os.path.join(os.path.dirname(output_path), piece_filename)
-        if export_mesh:
-            os.makedirs(os.path.dirname(piece_filepath), exist_ok=True)
-            piece.export(piece_filepath)
+    for i, piece_name in enumerate(piece_names):
+        piece_filename = os.path.join(input_path, piece_name).removeprefix(commonprefix)
 
         link_name = "link_{}".format(piece_name)
-        I = [["{:.2E}".format(y) for y in x] for x in piece.moment_inertia]  # NOQA
+        # I = [["{:.2E}".format(y) for y in x] for x in piece.moment_inertia]  # NOQA
         link = et.SubElement(root, "link", name=link_name)
         inertial = et.SubElement(link, "inertial")
         et.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
         # et.SubElement(inertial, 'mass', value='{:.2E}'.format(piece.mass))
-        et.SubElement(
-            inertial,
-            "inertia",
-            ixx=I[0][0],
-            ixy=I[0][1],
-            ixz=I[0][2],
-            iyy=I[1][1],
-            iyz=I[1][2],
-            izz=I[2][2],
-        )
+        # et.SubElement(
+        #     inertial,
+        #     "inertia",
+        #     ixx=I[0][0],
+        #     ixy=I[0][1],
+        #     ixz=I[0][2],
+        #     iyy=I[1][1],
+        #     iyz=I[1][2],
+        #     izz=I[2][2],
+        # )
 
         # Visual Information
         visual = et.SubElement(link, "visual")
@@ -110,24 +106,19 @@ def export_urdf(config):
 
 @task_wrapper
 def export_mjcf(config):
-    input_path, export_mesh, output_path = (
+    input_path, output_path = (
         config["input_path"],
-        config["export_mesh"],
         config["output_path"],
     )
 
-    parts = trimesh.load(input_path, force="mesh").split()
-
+    piece_names = os.listdir(input_path)
     asset_mesh_xml = ""
     body_mesh_xml = ""
 
-    for i, piece in enumerate(parts):
-        piece_name = f"convex_piece_{i}"
-        piece_filename = f"meshes/convex_piece_{i}.obj"
-        piece_filepath = os.path.join(os.path.dirname(output_path), piece_filename)
-        if export_mesh:
-            os.makedirs(os.path.dirname(piece_filepath), exist_ok=True)
-            piece.export(piece_filepath)
+    commonprefix = os.path.commonprefix([input_path, output_path])
+
+    for i, piece_name in enumerate(piece_names):
+        piece_filename = os.path.join(input_path, piece_name).removeprefix(commonprefix)
 
         asset_mesh_xml += f'<mesh name="{piece_name}" file="{piece_filename}"  scale="1.0 1.0 1.0"/>\n'
         body_mesh_xml += f'<geom mesh="{piece_name}" name="object_collision_{i}" class="collision"/>\n'
