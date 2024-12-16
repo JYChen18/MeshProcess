@@ -25,6 +25,11 @@ conda activate meshproc
 pip install trimesh
 pip install hydra-core
 pip install lxml
+
+# For offline partial point cloud rendering
+pip install warp-lang
+pip install opencv-python
+pip install pyglet
 ```
 
 3. Build the third-party packages according to the guidance in [ACVD](https://github.com/valette/ACVD/tree/master?tab=readme-ov-file#simple-compilation-howto-under-linux)
@@ -61,9 +66,8 @@ python src/script/process.py data=example task=main
 python src/script/statistic.py data=example task=main
 ```
 
-
-## TODO
-
-1. GPU-based partial point clouds rendering.
-2. (Potential) Reduce part number of the CoACD output.
+3. Rendering partial point cloud.
+```
+python src/script/multi_gpu_render.py
+```
 

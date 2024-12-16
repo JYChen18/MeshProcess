@@ -16,7 +16,7 @@
   part_output_folder_path: ${data.output_template}/urdf/meshes
   part_output_filename: convex_piece
   quiet: True
-  additional_args: -mv 1e-5 --decimate
+  additional_args: -mv 1e-7 --decimate
 
 1-export_urdf: 
   input_path: ${data.output_template}/urdf/meshes

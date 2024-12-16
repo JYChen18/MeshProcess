@@ -49,7 +49,7 @@ def main(cfg: DictConfig) -> None:
         "**" in cfg["data"]["input_template"]
         and len(cfg["data"]["input_template"].split("**")) == 2
     )
-    full_path_lst = glob.glob(cfg["data"]["input_template"], recursive=True)
+    full_path_lst = glob.glob(cfg["data"]["input_template"])
     prefix = cfg["data"]["input_template"].split("**")[0]
     suffix = cfg["data"]["input_template"].split("**")[1]
     obj_lst = [p.replace(prefix, "").replace(suffix, "") for p in full_path_lst]
