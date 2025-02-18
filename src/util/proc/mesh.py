@@ -3,8 +3,7 @@ import sys
 import numpy as np
 import trimesh
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.util_file import task_wrapper
+from ..util_file import task_wrapper
 
 
 @task_wrapper

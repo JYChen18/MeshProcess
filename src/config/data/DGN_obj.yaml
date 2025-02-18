@@ -1,6 +1,6 @@
-root: assets/objaverse_v1
+root: assets/DGN_obj
 
-input_template: ${data.root}/raw_mesh/**.glb
+input_template: ${data.root}/raw_mesh/**.obj
 
 output_template: ${data.root}/processed_data/**
 

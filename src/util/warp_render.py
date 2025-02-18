@@ -1,6 +1,5 @@
 import os
 import sys
-import argparse
 
 import pyglet
 
@@ -10,13 +9,12 @@ import warp as wp
 import warp.render
 import torch
 import trimesh
+from tqdm import tqdm
 
 os.environ["DISPLAY"] = ":98"  # useless?
 import cv2
-from tqdm import tqdm
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.util_file import load_json
+from .util_file import load_json
 
 
 def create_view_matrix(position, target):
@@ -119,6 +117,7 @@ class WarpRender:
         self.help_yy, self.help_xx = torch.meshgrid(
             torch.arange(self.tile_height).to(self.device),
             torch.arange(self.tile_width).to(self.device),
+            indexing="ij",
         )
         self.help_xx = self.help_xx[None, :, :, None]
         self.help_yy = self.help_yy[None, :, :, None]
@@ -156,12 +155,12 @@ class WarpRender:
                 )
         return
 
-    def get_image(self, mode="depth", save_path=None):
-        if mode == "depth" and save_path is None:
+    def get_image(self, mode="depth"):
+        if mode == "depth":
             image = wp.zeros(
                 (self.num_tiles, self.tile_height, self.tile_width, 1), dtype=wp.float32
             )
-        elif mode == "rgb" or save_path is not None:
+        elif mode == "rgb":
             image = wp.zeros(
                 (self.num_tiles, self.tile_height, self.tile_width, 3), dtype=wp.float32
             )
@@ -170,13 +169,6 @@ class WarpRender:
 
         self.renderer.get_pixels(image, split_up_tiles=True, mode=mode)
 
-        if save_path is not None:
-            os.makedirs(save_path, exist_ok=True)
-            for i in range(self.num_tiles):
-                cv2.imwrite(
-                    os.path.join(save_path, f"rgb{i}.png"),
-                    np.squeeze(image.numpy()[i]) * 255,
-                )
         return wp.to_torch(image)
 
     def render(self, obj_mesh, obj_scale, obj_trans, obj_rot):
@@ -207,87 +199,27 @@ class WarpRender:
         return world_coords[..., :3]
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-f",
-        "--folder",
-        type=str,
-        default="/mnt/disk1/jiayichen/data/DGNObj",
-        help="the path to the data directory",
-    )
-    parser.add_argument(
-        "-sp",
-        "--split_path",
-        type=str,
-        default="/mnt/disk1/jiayichen/data/DGNObj_splits/all.json",
-        help="split path",
-    )
-
-    parser.add_argument(
-        "-o",
-        "--output_folder",
-        type=str,
-        default="table_pc",
-        help="saved path relative to the args.folder",
-    )
-    parser.add_argument(
-        "-l",
-        "--scale_lst",
-        type=float,
-        nargs="+",
-        default=[0.05, 0.10, 0.15, 0.20],
-        help="object scales",
-    )
-    parser.add_argument(
-        "-debug",
-        "--debug_dir",
-        type=str,
-        default=None,
-        help="the path to save the images",
-    )
-    parser.add_argument(
-        "-k",
-        "--skip",
-        action="store_false",
-        help="whether to skip exist files (default: True)",
-    )
-    parser.add_argument("-g", "--gpu", type=int, default=0, help="gpu id")
-    parser.add_argument("-s", "--start", type=int, default=0, help="start obj id")
-    parser.add_argument("-e", "--end", type=int, default=1, help="end obj id")
-    args = parser.parse_args()
-
-    device = f"cuda:{args.gpu}"
-
+def batch_warp_render(configs, obj_lst, gpu_id):
+    func_config = configs.func
+    device = f"cuda:{gpu_id}"
     with wp.ScopedDevice(device):
         renderer = WarpRender(device)
 
-        obj_lst = load_json(args.split_path)[args.start : args.end]
-
         for obj_code in tqdm(obj_lst):
-            obj_path = os.path.join(args.folder, obj_code, "mesh/simplified.obj")
-            obj_mesh = trimesh.load(obj_path)
-            complete_pc, _ = trimesh.sample.sample_surface(obj_mesh, 8192)
-
-            table_pose_path = os.path.join(
-                args.folder, obj_code, "info/tabletop_pose.json"
+            obj_mesh = trimesh.load(func_config.input_mesh_path.replace("**", obj_code))
+            table_pose_anno = load_json(
+                func_config.input_pose_path.replace("**", obj_code)
             )
-            if not os.path.exists(table_pose_path):
-                continue
-            table_pose_anno = load_json(table_pose_path)
-
-            obj_newf_path = os.path.join(
-                args.folder, obj_code, "point_clouds", args.output_folder
-            )
-            os.makedirs(obj_newf_path, exist_ok=True)
+            output_folder = func_config.save_path.replace("**", obj_code)
+            os.makedirs(output_folder, exist_ok=True)
             np.save(
-                os.path.join(obj_newf_path, "cam_in.npy"),
+                os.path.join(output_folder, "cam_in.npy"),
                 renderer.projection_matrixs[0],
             )
 
-            for scale in args.scale_lst:
+            for scale in func_config.obj_scale_lst:
                 obj_scale_path = os.path.join(
-                    obj_newf_path, f"scale{str(int(scale*100)).zfill(3)}"
+                    output_folder, f"scale{str(int(scale*100)).zfill(3)}"
                 )
 
                 for pose_num, pose in enumerate(table_pose_anno):
@@ -297,7 +229,7 @@ if __name__ == "__main__":
                     )
 
                     # check path
-                    if args.skip:
+                    if configs.skip:
                         conti_flag = True
                         for b in range(batch):
                             pc_path = os.path.join(
@@ -309,10 +241,8 @@ if __name__ == "__main__":
                             else:
                                 check_pc = np.load(pc_path, allow_pickle=True)
                                 if len(check_pc) == 0:
-                                    print(f"Point number is 0 ! {pc_path}")
                                     conti_flag = False
                         if conti_flag:
-                            print(f"Skip {pc_path}")
                             continue
 
                     obj_scale = np.array([scale, scale, scale])
@@ -323,26 +253,38 @@ if __name__ == "__main__":
                         obj_mesh, obj_scale, obj_trans, obj_rot
                     )
 
-                    depth_image = renderer.get_image(
-                        mode="depth", save_path=args.debug_dir
-                    )
+                    if func_config.save_rgb:
+                        rgb_image = renderer.get_image(mode="rgb")
 
-                    all_pc = renderer.depth_to_point_cloud(depth_image)
-                    mask = depth_image.reshape(batch, -1) < 5
+                    if func_config.save_depth or func_config.save_pc:
+                        depth_image = renderer.get_image(mode="depth")
+                        if func_config.save_pc:
+                            all_pc = renderer.depth_to_point_cloud(depth_image)
+                            mask = depth_image.reshape(batch, -1) < 5
 
                     # save informations
                     for b in range(batch):
-                        pc = all_pc[b, mask[b]]
                         os.makedirs(obj_pose_path, exist_ok=True)
+                        data_id = str(b).zfill(2)
                         np.save(
-                            os.path.join(
-                                obj_pose_path, f"cam_ex_{str(b).zfill(2)}.npy"
-                            ),
+                            os.path.join(obj_pose_path, f"cam_ex_{data_id}.npy"),
                             view_matrix[b].cpu().numpy(),
                         )
-                        np.save(
-                            os.path.join(
-                                obj_pose_path, f"partial_pc_{str(b).zfill(2)}.npy"
-                            ),
-                            pc.cpu().numpy().astype(np.float16),
-                        )
+                        if func_config.save_rgb:
+                            cv2.imwrite(
+                                os.path.join(obj_pose_path, f"rgb_{data_id}.png"),
+                                rgb_image[b].cpu().numpy() * 255,
+                            )
+                        if func_config.save_depth:
+                            cv2.imwrite(
+                                os.path.join(obj_pose_path, f"depth_{data_id}.png"),
+                                depth_image[b].cpu().numpy(),
+                            )
+                        if func_config.save_pc:
+                            pc = all_pc[b, mask[b]]
+                            np.save(
+                                os.path.join(
+                                    obj_pose_path, f"partial_pc_{data_id}.npy"
+                                ),
+                                pc.cpu().numpy().astype(np.float16),
+                            )

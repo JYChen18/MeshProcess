@@ -16,7 +16,7 @@
   part_output_folder_path: ${data.output_template}/urdf/meshes
   part_output_filename: convex_piece
   quiet: True
-  additional_args: -mv 1e-7 --decimate
+  additional_args: -mv 1e-10 --decimate
 
 1-export_urdf: 
   input_path: ${data.output_template}/urdf/meshes
@@ -58,24 +58,15 @@
   input_path: ${data.output_template}/mesh/simplified.obj
   output_path: ${data.output_template}/info/simplified.json
 
-# Processing point clouds
 1-get_complete_pc: 
   input_path: ${data.output_template}/mesh/simplified.obj
-  output_path: ${data.output_template}/point_clouds/complete.npy
+  output_path: ${data.output_vision_template}/complete_point_cloud.npy
   point_num: 4096
-
 
 1-get_tabletop_scale:
   input_path: ${data.output_template}/info/tabletop_pose.json
-  pc_path: ${data.output_template}/point_clouds/complete.npy
+  pc_path: ${data.output_vision_template}/complete_point_cloud.npy
   output_path: ${data.output_template}/info/tabletop_scale.json
   width_max: 0.15
   height_min: 0.04
-
-# TODO 
-
-# render_partial_pc:
-#   input_path: mesh/simplified.obj
-#   output_path: point_clouds/kinect_partial
-
 

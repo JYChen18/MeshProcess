@@ -203,7 +203,5 @@ docs/*
 
 output.txt
 *.log.lock
-outputs/
-example_data/
+assets/
 MUJOCO_LOG.TXT
-debug/

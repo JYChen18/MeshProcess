@@ -1,7 +1,9 @@
-root: example_data
+root: assets/example_obj
 
-input_template: ${data.root}/input/**.glb
+input_template: ${data.root}/raw_mesh/**
 
-output_template: ${data.root}/output/**
+output_template: ${data.root}/processed_data/**
 
-output_split: ${data.root}/splits
+output_vision_template: ${data.root}/vision_data/**
+
+output_split: ${data.root}/valid_split

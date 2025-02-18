@@ -1,0 +1,14 @@
+gpu_lst: [0,1,2,3]
+thread_per_gpu: 10
+
+split_path: ${data.output_split}/all.json
+obj_num: 6000
+
+input_mesh_path: ${data.output_template}/mesh/simplified.obj
+input_pose_path: ${data.output_template}/info/tabletop_pose.json
+obj_scale_lst: [0.05, 0.10, 0.15, 0.20]
+
+save_path: ${data.output_vision_template}/tabletop_kinect
+save_pc: True
+save_rgb: True
+save_depth: True

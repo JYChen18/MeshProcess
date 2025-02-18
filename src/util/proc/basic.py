@@ -4,8 +4,7 @@ import trimesh
 import numpy as np
 import lxml.etree as et
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.util_file import write_json, task_wrapper
+from ..util_file import write_json, task_wrapper
 
 
 # save basic info

@@ -6,10 +6,9 @@ import mujoco
 import numpy as np
 import imageio
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.sample import even_sample_points_on_sphere
-from utils.util_file import task_wrapper, write_json, load_json
-from utils.rotation import batched_quat_delta, batched_quat_to_mat
+from ..sample import even_sample_points_on_sphere
+from ..util_file import task_wrapper, write_json, load_json
+from ..rotation import batched_quat_delta, batched_quat_to_mat
 
 
 @task_wrapper

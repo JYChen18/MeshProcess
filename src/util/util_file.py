@@ -1,6 +1,7 @@
 from typing import Dict, List
 import os
 import json
+import logging
 
 import yaml
 from yaml import Loader
@@ -25,7 +26,7 @@ def load_yaml(file_path) -> Dict:
 
 
 def task_wrapper(func):
-    def wrapper(cfg, logger, skip, debug):
+    def wrapper(cfg, skip, debug):
         # Missing input_path means the failure of the last task. Directly finish the process of this object
         if ("check_input" not in cfg or cfg["check_input"]) and not os.path.exists(
             cfg["input_path"]
@@ -37,7 +38,7 @@ def task_wrapper(func):
             cfg["quiet"] = False
 
         if "output_path" in cfg and os.path.exists(cfg["output_path"]) and skip:
-            logger.debug(
+            logging.debug(
                 f"Skip task {func.__name__}: output path already exist in {cfg['output_path']}"
             )
             output = None
@@ -45,7 +46,7 @@ def task_wrapper(func):
             if "output_path" in cfg.keys():
                 os.makedirs(os.path.dirname(cfg["output_path"]), exist_ok=True)
             output = func(cfg)
-            logger.debug(f"Finish task {func.__name__}.")
+            logging.debug(f"Finish task {func.__name__}.")
 
         if (
             "delete_input" in cfg

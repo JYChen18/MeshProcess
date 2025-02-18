@@ -1,19 +1,15 @@
 from glob import glob
-import hydra
-import logging
 import os
 import sys
+import logging
 
 import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from utils.util_file import write_json
-
-logger = logging.getLogger("DataSplit")
+from util.util_file import write_json
 
 
-@hydra.main(config_path="../config", config_name="base", version_base=None)
-def main(cfg):
+def func_split(cfg):
     full_path_lst = glob(cfg["data"]["input_template"])
     prefix = cfg["data"]["input_template"].split("**")[0]
     suffix = cfg["data"]["input_template"].split("**")[1]
@@ -32,14 +28,14 @@ def main(cfg):
             )
 
             if len(curr_valid_obj_lst) / len(valid_obj_lst) < 0.1:
-                print(f"Skipped file suffix: {suffix[1:]}")
+                logging.info(f"Skipped file suffix: {suffix[1:]}")
                 continue
 
-            print(f"Checked file suffix: {suffix[1:]}")
+            logging.info(f"Checked file suffix: {suffix[1:]}")
             valid_obj_lst = valid_obj_lst.intersection(curr_valid_obj_lst)
 
     valid_obj_num = len(valid_obj_lst)
-    print(
+    logging.info(
         "Valid object number: %d; Total object number: %d"
         % (valid_obj_num, total_valid_obj_num)
     )
@@ -59,7 +55,3 @@ def main(cfg):
         list(shuffled_obj_lst), os.path.join(cfg["data"]["output_split"], "all.json")
     )
     return
-
-
-if __name__ == "__main__":
-    main()

@@ -10,5 +10,12 @@ debug_id:
 defaults:
   - _self_
   - data: example
-  - task: main
+  - task: official
+  - func: proc
 
+task_name: ${hydra:runtime.choices.task}
+func_name: ${hydra:runtime.choices.func}
+
+hydra:
+  run:
+    dir: ${data.root}/log/${func_name}_${task_name}_${now:%Y_%m_%d_%H_%M_%S}
