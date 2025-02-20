@@ -1,4 +1,4 @@
-root: assets/example_obj
+root: assets/object/example_obj
 
 input_template: ${data.root}/raw_mesh/**
 

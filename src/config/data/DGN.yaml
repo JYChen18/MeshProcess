@@ -1,4 +1,4 @@
-root: assets/DGN_obj
+root: assets/object/DGN_obj
 
 input_template: ${data.root}/raw_mesh/**.obj
 

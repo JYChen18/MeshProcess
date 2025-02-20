@@ -1,4 +1,4 @@
-root: assets/objaverse_v1
+root: assets/object/objaverse_v1
 
 input_template: ${data.root}/raw_mesh/**.glb
 

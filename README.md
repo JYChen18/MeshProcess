@@ -21,6 +21,7 @@ This repository **does not propose any new methods**, but provides easy-to-use c
 ### Installation
 1. Clone the third-party dependencies.
 ```
+cd MeshProcess
 git submodule update --init --recursive --progress
 ```
 
@@ -59,29 +60,34 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 4. Build our customized CoACD by following the [compiling instructions](https://github.com/JYChen18/CoACD?tab=readme-ov-file#3-compile). Please note that we do not support CoACD installed via `pip`. OpenVDB will be automatically included after compiling CoACD.
 
 
-### Running
-1. **Processing meshes**: For a quick start, example mesh data is provided in the `assets/example_obj/raw_mesh` directory. Processed results will be saved in `assets/example_obj/processed_data`.
+### Running Example Data
+For a quick start, we provide example mesh data in the `assets/object/example_obj/raw_mesh` directory, which can be processed by our all-in-one script.
 ```
-python src/main.py func=proc
-```
-
-2. **(Optional) Getting statistics**: This can be used to monitor the progress during processing meshes.
-```
-python src/main.py func=stat
+bash script/example.sh
 ```
 
-3. **Recording and spliting valid data**: The result will be saved in `assets/example_obj/valid_split`. 
+### Running New Data
+1. **Downloading datasets**: Please see the [guides](https://github.com/JYChen18/MeshProcess/tree/main/src/dataset#dataset-download) for downloading and processing object assets from [DexGraspNet](https://pku-epic.github.io/DexGraspNet/) and [Objaverse](https://objaverse.allenai.org/objaverse-1.0). You can prepare your raw mesh data similarly.
+
+2. **Processing meshes**: Results will be saved in `assets/object/DGN_obj/processed_data`.
 ```
-python src/main.py func=split
+python src/main.py func=proc data=DGN
 ```
 
-4. **Rendering partial point cloud and (optional) images**: The result will be saved in `assets/example_obj/vision_data`. 
+3. **(Optional) Getting statistics**: This can be used to monitor the progress during processing meshes.
 ```
-python src/main.py func=render
+python src/main.py func=stat data=DGN
 ```
 
-### Dataset Downloads
-Our code has also been tested on object assets from [DexGraspNet](https://pku-epic.github.io/DexGraspNet/) and [Objaverse](https://objaverse.allenai.org/objaverse-1.0). Please see the guides [here]() for downloading and processing.
+4. **Recording and spliting valid data**: Results will be saved in `assets/object/DGN_obj/valid_split`. 
+```
+python src/main.py func=split data=DGN
+```
+
+5. **Rendering partial point cloud and (optional) images**: Results will be saved in `assets/object/DGN_obj/vision_data`. This is not needed for grasp pose synthesis, but necessary for network learning.
+```
+python src/main.py func=render data=DGN
+```
 
 ## Citation
 If you found this repository useful, please consider to cite the following works:
