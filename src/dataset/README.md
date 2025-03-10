@@ -1,10 +1,10 @@
 # Dataset Download
-Here is the guides to download object assets used in [BODex](https://pku-epic.github.io/BODex/) and [follow-up work](todo). BODex only evaluates on a part of the objects from DexGraspNet.
+Here are the guides to download object assets used in [BODex](https://pku-epic.github.io/BODex/) and [follow-up work](todo). 
 
 ## DexGraspNet
-Download links: [PKU dist](https://disk.pku.edu.cn/anyshare/zh-cn/link/AA94E7804CC4E24551B2AE30C39A1275C1/F980E10128184A3BA8A16A14B0879737/5986E8B5750843FB8431CEC07532E6DB?_tb=none) 
+Download links: [Hugging Face](https://huggingface.co/datasets/JiayiChenPKU/BODex) 
 
-- Downloading and unzip processed results: `DGN_obj_processed.zip`, `DGN_obj_split.zip`, and (optionally) `DGN_obj_vision.zip`. The final folder should be organized like:
+- Downloading and unzip processed results: `DGN_obj_processed.zip`, `DGN_obj_split.zip`, and (optionally) `DGN_obj_vision.zip`. The final folder should be organized as follows:
 ```
 assets/object/DGN_obj
 |- processed_data
@@ -18,7 +18,7 @@ assets/object/DGN_obj
 |  |_ ...
 ```
 
-- (Alternatively) Downloading raw meshes `DGN_obj_raw.zip` and processing by yourself according to the [guides](https://github.com/JYChen18/MeshProcess/tree/main?tab=readme-ov-file#running-seperately). Note that if processed by yourself, the resulted meshes and splits may slightly differ from ours.
+- (Alternatively) Downloading raw meshes `DGN_obj_raw.zip` and processing by yourself according to the [guides](https://github.com/JYChen18/MeshProcess/tree/main?tab=readme-ov-file#running-seperately). Note that if processed by yourself, the resulting meshes and splits may slightly differ from ours.
 
 - Discussion: The official repository of [DexGraspNet](https://github.com/PKU-EPIC/DexGraspNet) has only released their processed meshes, which doesn't satisfy our need. Therefore, we re-processed the raw meshes using this repository. The source of raw mesh data includes [ShapeNetCore](https://huggingface.co/datasets/ShapeNet/ShapeNetCore/tree/main), [ShapeNetSem](https://huggingface.co/datasets/ShapeNet/ShapeNetSem-archive), [MuJoCo_Sanned_Objects](https://github.com/kevinzakka/mujoco_scanned_objects/tree/main), and [DDG](https://gamma.umd.edu/researchdirections/grasping/differentiable_grasp_planner). Since DDG's data link is not valid anymore, we use the DDG's meshes released by DexGraspNet as the raw mesh for processing. 
 
