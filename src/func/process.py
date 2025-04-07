@@ -5,6 +5,7 @@ import logging
 import traceback
 import multiprocessing
 import glob
+from omegaconf import open_dict
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from util.proc.mesh import *
@@ -18,6 +19,8 @@ def process_single_obj(params):
     new_task_cfg = deepcopy(cfg["task"])
     for task_name, task_cfg in new_task_cfg.items():
         real_task_name = task_name.split("-")[-1]
+        with open_dict(task_cfg):
+            task_cfg.obj_id = obj_id
         for k, v in task_cfg.items():
             if k.endswith("_path"):
                 task_cfg[k] = os.path.abspath(v.replace("**", obj_id))

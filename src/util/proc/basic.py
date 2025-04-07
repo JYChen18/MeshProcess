@@ -4,7 +4,7 @@ import trimesh
 import numpy as np
 import lxml.etree as et
 
-from ..util_file import write_json, task_wrapper
+from ..util_file import load_json, write_json, task_wrapper
 
 
 # save basic info
@@ -104,87 +104,68 @@ def export_urdf(config):
 
 
 @task_wrapper
-def export_mjcf(config):
-    input_path, output_path = (
-        config["input_path"],
-        config["output_path"],
-    )
-
-    piece_names = os.listdir(input_path)
-    asset_mesh_xml = ""
-    body_mesh_xml = ""
-
-    commonprefix = os.path.commonprefix([input_path, output_path])
-
-    for i, piece_name in enumerate(piece_names):
-        piece_filename = os.path.join(input_path, piece_name).removeprefix(commonprefix)
-
-        asset_mesh_xml += f'<mesh name="{piece_name}" file="{piece_filename}"  scale="1.0 1.0 1.0"/>\n'
-        body_mesh_xml += f'<geom mesh="{piece_name}" name="object_collision_{i}" class="collision"/>\n'
-
-    # Write MJCF file
-    model_xml = XML_TEMPLATE.replace(
-        "<object_mesh_to_replace></object_mesh_to_replace>", asset_mesh_xml
-    )
-    model_xml = model_xml.replace(
-        "<object_body_to_replace></object_body_to_replace>", body_mesh_xml
-    )
-    with open(output_path, "w") as f:
-        f.write(model_xml)
-
-    return
-
-
-@task_wrapper
 def remove_input(config):
     pass
 
 
-XML_TEMPLATE = """<mujoco model="scene">
-    <option cone="elliptic" impratio="10"/>
-    <statistic center="0.4 0 0.4" extent="1"/>
-    <compiler autolimits="true" angle="radian" meshdir="."/>
-    <option impratio="10" integrator="implicitfast" cone="elliptic" noslip_iterations="2"/>
-    
-    <default>
-        <default class="visual">
-        <geom group="2" type="mesh" contype="0" conaffinity="0"/>
-        </default>
-        <default class="collision">
-        <geom group="2" type="mesh" condim="4"/>
-        </default>
-    </default>
-    
-    <visual>
-        <headlight diffuse="0.6 0.6 0.6" ambient="0.1 0.1 0.1" specular="0 0 0"/>
-        <rgba haze="0.15 0.25 0.35 1"/>
-        <global azimuth="120" elevation="-20"/>
-    </visual>
-    
-    <asset>
-        <object_mesh_to_replace></object_mesh_to_replace>
-        <material name="black" specular="0.5" shininess="0.25" rgba="0.16355 0.16355 0.16355 1"/>
-        <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
-        <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
-        markrgb="0.8 0.8 0.8" width="300" height="300"/>
-        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
-    </asset>
-    
-    <worldbody>
-        <light name="spotlight1" mode="targetbodycom" target="decomposed" pos="0 -1 2"/>
-        <camera name="closeup1" pos="0.5 0.25 1.3" xyaxes="-1 0 0 0 -0.6 0.8"/>
-        <camera name="closeup2" pos="0.5 0.0 0.8" xyaxes="1 0 0 0 -1 0"/>
-        <camera name="closeup3" pos="0.1 0 1.05" xyaxes="0 -1 0 0 0 1"/>
-        <camera name="closeup4"  pos="0.5 0 1.4" xyaxes="0 -1 0 1 0 0"/>
-        <camera name="closeup5"  pos="0 -0.3 0.1" xyaxes="1 0 0 0 0 1"/>
-        <camera name="closeup" pos="0  -0.3 0.1" xyaxes="1 0 0 0 0 1"/>
-        <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
-        <body name="decomposed" quat="1 0 0 1" pos="0 0 0">
-        <freejoint/>
-        <object_body_to_replace></object_body_to_replace>
-        </body>
-    </worldbody>
-    <keyframe>
-        <key name="home" qpos="0 0 0.8 1 0 0 0"/>
-    </keyframe>
-    </mujoco>"""
+@task_wrapper
+def export_scene_cfg(config):
+    input_path, output_path, obj_id, file_path, xml_path, urdf_path, scale_lst = (
+        config["input_path"],
+        config["output_path"],
+        config["obj_id"],
+        config["file_path"],
+        config["xml_path"],
+        config["urdf_path"],
+        config["scale_lst"],
+    )
+    pose_lst = load_json(input_path)
+
+    for scale in scale_lst:
+        scene_cfg = {
+            "scene": {
+                obj_id: {
+                    "type": "rigid_mesh",
+                    "file_path": file_path,
+                    "xml_path": xml_path,
+                    "urdf_path": urdf_path,
+                    "scale": np.array([scale, scale, scale]),
+                    "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
+                    "pose_id": -1,
+                }
+            },
+            "scene_id": f"floating_{obj_id}_scale{str(int(scale*100)).zfill(3)}",
+            "interest_obj_name": obj_id,
+            "interest_direction": np.array([0.0, 0, 1, 0, 0, 0]),
+        }
+        save_path = os.path.join(
+            os.path.dirname(output_path),
+            "floating",
+            f"scale{str(int(scale*100)).zfill(3)}",
+        )
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        np.save(save_path, scene_cfg)
+
+        scene_cfg["scene"]["table"] = {
+            "type": "plane",
+            "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
+            "size": np.array([0.0, 0, 1]),
+        }
+
+        for i, pose in enumerate(pose_lst):
+            scaled_pose = np.array(pose)
+            scaled_pose[:3] *= scale
+            scene_cfg["scene"][obj_id]["pose"] = scaled_pose
+            scene_cfg["scene"][obj_id]["pose_id"] = i
+            scene_cfg["scene_id"] = (
+                f"tabletop_{obj_id}_pose{str(i).zfill(3)}_scale{str(int(scale*100)).zfill(3)}"
+            )
+
+            save_path2 = os.path.join(
+                os.path.dirname(output_path),
+                "tabletop",
+                f"pose{str(i).zfill(3)}_scale{str(int(scale*100)).zfill(3)}",
+            )
+            os.makedirs(os.path.dirname(save_path2), exist_ok=True)
+            np.save(save_path2, scene_cfg)
+    return

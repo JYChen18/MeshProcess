@@ -29,7 +29,7 @@ git submodule update --init --recursive --progress
 ```
 conda create -n meshproc python=3.10    
 conda activate meshproc
-pip install mujoco
+pip install mujoco==3.2.7
 pip install trimesh
 pip install hydra-core
 pip install lxml

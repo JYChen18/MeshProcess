@@ -7,8 +7,45 @@ import numpy as np
 import imageio
 
 from ..sample import even_sample_points_on_sphere
-from ..util_file import task_wrapper, write_json, load_json
-from ..rotation import batched_quat_delta, batched_quat_to_mat
+from ..util_file import task_wrapper, write_json
+from ..rotation import batched_quat_delta
+
+
+@task_wrapper
+def export_mjcf(config):
+    input_path, output_path = (
+        config["input_path"],
+        config["output_path"],
+    )
+
+    piece_names = os.listdir(input_path)
+    commonprefix = os.path.commonprefix([input_path, output_path])
+
+    spec = mujoco.MjSpec()
+    spec.meshdir = commonprefix
+    obj_body = spec.worldbody.add_body(name="object")
+    for i, piece_name in enumerate(piece_names):
+        piece_filename = os.path.join(input_path, piece_name).removeprefix(commonprefix)
+        spec.add_mesh(name=piece_name, file=piece_filename)
+        obj_body.add_geom(
+            name=f"object_visual_{i}",
+            type=mujoco.mjtGeom.mjGEOM_MESH,
+            meshname=piece_name,
+            density=0,
+            contype=0,
+            conaffinity=0,
+        )
+        obj_body.add_geom(
+            name=f"object_collision_{i}",
+            type=mujoco.mjtGeom.mjGEOM_MESH,
+            meshname=piece_name,
+        )
+
+    model = spec.compile()
+    with open(output_path, "w") as f:
+        f.write(spec.to_xml())
+
+    return
 
 
 @task_wrapper
@@ -21,21 +58,30 @@ def get_tabletop_pose(config):
         config["debug_vis_path"] if "debug_vis_path" in config else None,
     )
 
-    with open(input_path, "r") as file:
-        model_xml = file.read()
-    model_xml = model_xml.replace(
-        'meshdir="."', f'meshdir="{os.path.dirname(input_path)}"'
-    )
-
-    # Use scale = 0.1 to simulate to reduce random error.
     scale = 0.1
-    model_xml = model_xml.replace(
-        'scale="1.0 1.0 1.0"', f'scale="{scale} {scale} {scale}"'
-    )
+    spec = mujoco.MjSpec.from_file(input_path)
+    spec.option.timestep = 0.005
+    spec.option.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
+    spec.option.enableflags = mujoco.mjtEnableBit.mjENBL_NATIVECCD
+    spec.option.cone = mujoco.mjtCone.mjCONE_ELLIPTIC
+    spec.option.noslip_iterations = 2
+    spec.option.impratio = 10
 
-    model = mujoco.MjModel.from_xml_string(model_xml)
-    model.geom_friction = np.array([0.6, 0.02, 0.0001])
-    model.opt.timestep = 0.005
+    spec.bodies[-1].add_freejoint(name="freejoint")
+    spec.worldbody.add_geom(
+        name="floor", type=mujoco.mjtGeom.mjGEOM_PLANE, size=[0, 0, 1.0]
+    )
+    spec.worldbody.add_camera(
+        name="closeup", pos=[0.0, 1.0, 1.0], xyaxes=[-1, 0, 0, 0, -1, 1]
+    )
+    for m in spec.meshes:
+        m.scale = [scale, scale, scale]
+    for g in spec.geoms:
+        if g.contype != 0:
+            g.condim = 4
+            g.friction = [0.6, 0.02, 0.0001]
+
+    model = spec.compile()
     data = mujoco.MjData(model)
 
     if debug_vis_path is not None:
@@ -114,45 +160,5 @@ def get_tabletop_pose(config):
             pose_array = pose_array[remain_ids]
 
         write_json(pose_array.tolist(), output_path)
-
-    return
-
-
-@task_wrapper
-def get_tabletop_scale(config):
-    input_path, pc_path, output_path, width_max, height_min = (
-        config["input_path"],
-        config["pc_path"],
-        config["output_path"],
-        config["width_max"],
-        config["height_min"],
-    )
-
-    tabletop_pose = np.array(load_json(input_path))
-    trans = tabletop_pose[:, :3]
-    rot = batched_quat_to_mat(tabletop_pose[:, 3:7])
-
-    pc = np.load(pc_path)
-    pc = pc[
-        np.random.permutation(pc.shape[0])[:128]
-    ]  # use a subset of pc to reduce computation
-    posed_pc = pc[None] @ rot.transpose(0, 2, 1) + trans[:, None, :]
-
-    centered_pc = posed_pc[..., :-1] - np.mean(
-        posed_pc[..., :-1], axis=1, keepdims=True
-    )
-    covariance = np.einsum("ijk,ijl->ikl", centered_pc, centered_pc) / (
-        centered_pc.shape[1] - 1
-    )
-    _, _, vt = np.linalg.svd(covariance, full_matrices=False)
-    projected_pc = centered_pc @ vt.transpose(0, 2, 1)
-    pc_low_width = (projected_pc.max(axis=1) - projected_pc.min(axis=1))[..., -1]
-    scale_upper_bounds = width_max / pc_low_width
-
-    pc_height = posed_pc[..., -1].max(axis=1)
-    scale_lower_bounds = height_min / pc_height
-    write_json(
-        [[l, h] for l, h in zip(scale_lower_bounds, scale_upper_bounds)], output_path
-    )
 
     return
