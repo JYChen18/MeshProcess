@@ -43,7 +43,7 @@ def export_mjcf(config):
 
     model = spec.compile()
     with open(output_path, "w") as f:
-        f.write(spec.to_xml())
+        f.write(spec.to_xml().replace(commonprefix, "."))
 
     return
 
