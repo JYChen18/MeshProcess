@@ -122,13 +122,18 @@ def export_scene_cfg(config):
     pose_lst = load_json(input_path)
 
     for scale in scale_lst:
+        save_path = os.path.join(
+            os.path.dirname(output_path),
+            "floating",
+            f"scale{str(int(scale*100)).zfill(3)}",
+        )
         scene_cfg = {
             "scene": {
                 obj_id: {
                     "type": "rigid_mesh",
-                    "file_path": file_path,
-                    "xml_path": xml_path,
-                    "urdf_path": urdf_path,
+                    "file_path": os.path.relpath(file_path, os.path.dirname(save_path)),
+                    "xml_path": os.path.relpath(xml_path, os.path.dirname(save_path)),
+                    "urdf_path": os.path.relpath(urdf_path, os.path.dirname(save_path)),
                     "scale": np.array([scale, scale, scale]),
                     "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
                     "pose_id": -1,
@@ -138,11 +143,6 @@ def export_scene_cfg(config):
             "interest_obj_name": obj_id,
             "interest_direction": np.array([0.0, 0, 1, 0, 0, 0]),
         }
-        save_path = os.path.join(
-            os.path.dirname(output_path),
-            "floating",
-            f"scale{str(int(scale*100)).zfill(3)}",
-        )
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         np.save(save_path, scene_cfg)
 

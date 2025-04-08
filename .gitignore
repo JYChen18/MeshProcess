@@ -205,3 +205,4 @@ output.txt
 *.log.lock
 assets/
 MUJOCO_LOG.TXT
+debug*
