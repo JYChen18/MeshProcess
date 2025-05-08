@@ -23,11 +23,10 @@ def export_mjcf(config):
 
     spec = mujoco.MjSpec()
     spec.meshdir = commonprefix
-    obj_body = spec.worldbody.add_body(name="object")
     for i, piece_name in enumerate(piece_names):
         piece_filename = os.path.join(input_path, piece_name).removeprefix(commonprefix)
         spec.add_mesh(name=piece_name, file=piece_filename)
-        obj_body.add_geom(
+        spec.worldbody.add_geom(
             name=f"object_visual_{i}",
             type=mujoco.mjtGeom.mjGEOM_MESH,
             meshname=piece_name,
@@ -35,7 +34,7 @@ def export_mjcf(config):
             contype=0,
             conaffinity=0,
         )
-        obj_body.add_geom(
+        spec.worldbody.add_geom(
             name=f"object_collision_{i}",
             type=mujoco.mjtGeom.mjGEOM_MESH,
             meshname=piece_name,
@@ -59,7 +58,7 @@ def get_tabletop_pose(config):
     )
 
     scale = 0.1
-    spec = mujoco.MjSpec.from_file(input_path)
+    spec = mujoco.MjSpec()
     spec.option.timestep = 0.005
     spec.option.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
     spec.option.enableflags = mujoco.mjtEnableBit.mjENBL_NATIVECCD
@@ -67,7 +66,10 @@ def get_tabletop_pose(config):
     spec.option.noslip_iterations = 2
     spec.option.impratio = 10
 
-    spec.bodies[-1].add_freejoint(name="freejoint")
+    obj_spec = mujoco.MjSpec.from_file(input_path)
+    attach_frame = spec.worldbody.add_frame()
+    child_world = attach_frame.attach_body(obj_spec.worldbody, "object", "")
+    child_world.add_freejoint(name="freejoint")
     spec.worldbody.add_geom(
         name="floor", type=mujoco.mjtGeom.mjGEOM_PLANE, size=[0, 0, 1.0]
     )

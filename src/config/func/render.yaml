@@ -8,7 +8,7 @@ input_mesh_path: ${data.output_template}/mesh/simplified.obj
 input_pose_path: ${data.output_template}/info/tabletop_pose.json
 obj_scale_lst: [0.05, 0.10, 0.15, 0.20]
 
-save_path: ${data.output_vision_template}/tabletop_kinect
+save_path: ${data.output_vision_template}/tabletop
 save_pc: True
 save_rgb: False
 save_depth: False

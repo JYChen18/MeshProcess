@@ -110,14 +110,26 @@ def remove_input(config):
 
 @task_wrapper
 def export_scene_cfg(config):
-    input_path, output_path, obj_id, file_path, xml_path, urdf_path, scale_lst = (
+    (
+        input_path,
+        output_path,
+        obj_id,
+        info_path,
+        file_path,
+        xml_path,
+        urdf_path,
+        scale_lst,
+        obj_mass,
+    ) = (
         config["input_path"],
         config["output_path"],
         config["obj_id"],
+        config["info_path"],
         config["file_path"],
         config["xml_path"],
         config["urdf_path"],
         config["scale_lst"],
+        config["obj_mass"],
     )
     pose_lst = load_json(input_path)
 
@@ -127,21 +139,26 @@ def export_scene_cfg(config):
             "floating",
             f"scale{str(int(scale*100)).zfill(3)}",
         )
+        obj_info = load_json(info_path)
+        obj_coef = obj_info["mass"] / (obj_info["density"] * (obj_info["scale"] ** 3))
         scene_cfg = {
             "scene": {
                 obj_id: {
-                    "type": "rigid_mesh",
+                    "type": "rigid_object",
                     "file_path": os.path.relpath(file_path, os.path.dirname(save_path)),
                     "xml_path": os.path.relpath(xml_path, os.path.dirname(save_path)),
                     "urdf_path": os.path.relpath(urdf_path, os.path.dirname(save_path)),
                     "scale": np.array([scale, scale, scale]),
                     "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
-                    "pose_id": -1,
+                    "mass": obj_mass,
+                    "density": obj_mass / (obj_coef * (scale**3)),
                 }
             },
-            "scene_id": f"floating_{obj_id}_scale{str(int(scale*100)).zfill(3)}",
-            "interest_obj_name": obj_id,
-            "interest_direction": np.array([0.0, 0, 1, 0, 0, 0]),
+            "scene_id": f"{obj_id}/floating/scale{str(int(scale*100)).zfill(3)}",
+            "task": {
+                "type": "force_closure",
+                "obj_name": obj_id,
+            },
         }
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         np.save(save_path, scene_cfg)
@@ -151,14 +168,19 @@ def export_scene_cfg(config):
             "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
             "size": np.array([0.0, 0, 1]),
         }
+        scene_cfg["task"] = {
+            "type": "slide",
+            "obj_name": obj_id,
+            "axis": np.array([0.0, 0, 1]),
+            "distance": 0.1,
+        }
 
         for i, pose in enumerate(pose_lst):
             scaled_pose = np.array(pose)
             scaled_pose[:3] *= scale
             scene_cfg["scene"][obj_id]["pose"] = scaled_pose
-            scene_cfg["scene"][obj_id]["pose_id"] = i
             scene_cfg["scene_id"] = (
-                f"tabletop_{obj_id}_pose{str(i).zfill(3)}_scale{str(int(scale*100)).zfill(3)}"
+                f"{obj_id}/tabletop/scale{str(int(scale*100)).zfill(3)}/pose{str(i).zfill(3)}"
             )
 
             save_path2 = os.path.join(
