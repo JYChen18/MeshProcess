@@ -4,6 +4,6 @@ input_template: ${data.root}/raw_mesh/**.glb
 
 output_template: ${data.root}/processed_data/**
 
-output_vision_template: ${data.root}/vision_data/**
+output_vision_template: ${data.root}/vision_data/azure_kinect/**
 
 output_split: ${data.root}/valid_split

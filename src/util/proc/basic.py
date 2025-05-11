@@ -159,6 +159,12 @@ def export_scene_cfg(config):
                 "type": "force_closure",
                 "obj_name": obj_id,
             },
+            "camera": {
+                "type": "spherical",
+                "radius": 1.0,
+                "pos_noise": 0.1,
+                "lookat_noise": 0.1,
+            },
         }
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         np.save(save_path, scene_cfg)
@@ -173,6 +179,15 @@ def export_scene_cfg(config):
             "obj_name": obj_id,
             "axis": np.array([0.0, 0, 1]),
             "distance": 0.1,
+        }
+        scene_cfg["camera"] = {
+            "type": "circular_zaxis",
+            "radius": 0.8,
+            "center": np.array([0, 0, 0.8]),
+            "up": np.array([0, 0, 1.0]),
+            "pos_noise": 0.1,
+            "lookat_noise": 0.1,
+            "up_noise": 0.2,
         }
 
         for i, pose in enumerate(pose_lst):
