@@ -140,7 +140,6 @@ def export_scene_cfg(config):
             f"scale{str(int(scale*100)).zfill(3)}",
         )
         obj_info = load_json(info_path)
-        obj_coef = obj_info["mass"] / (obj_info["density"] * (obj_info["scale"] ** 3))
         scene_cfg = {
             "scene": {
                 obj_id: {
@@ -151,19 +150,15 @@ def export_scene_cfg(config):
                     "scale": np.array([scale, scale, scale]),
                     "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
                     "mass": obj_mass,
-                    "density": obj_mass / (obj_coef * (scale**3)),
+                    "volume": obj_info["mass"]
+                    / obj_info["density"]
+                    * (scale / obj_info["scale"]) ** 3,
                 }
             },
             "scene_id": f"{obj_id}/floating/scale{str(int(scale*100)).zfill(3)}",
             "task": {
                 "type": "force_closure",
                 "obj_name": obj_id,
-            },
-            "camera": {
-                "type": "spherical",
-                "radius": 1.0,
-                "pos_noise": 0.1,
-                "lookat_noise": 0.1,
             },
         }
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -179,15 +174,6 @@ def export_scene_cfg(config):
             "obj_name": obj_id,
             "axis": np.array([0.0, 0, 1]),
             "distance": 0.1,
-        }
-        scene_cfg["camera"] = {
-            "type": "circular_zaxis",
-            "radius": 0.8,
-            "center": np.array([0, 0, 0.8]),
-            "up": np.array([0, 0, 1.0]),
-            "pos_noise": 0.1,
-            "lookat_noise": 0.1,
-            "up_noise": 0.2,
         }
 
         for i, pose in enumerate(pose_lst):

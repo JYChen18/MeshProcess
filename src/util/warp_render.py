@@ -23,10 +23,12 @@ def camera_spherical(sample_num, radius=1.0):
     return points
 
 
-def camera_circular_zaxis(sample_num, radius=0.8, center=np.array([0, 0, 0.8])):
+def camera_circular_zaxis(sample_num, radius=0.8, center=[0, 0, 0.8]):
     phi = np.pi * (3.0 - np.sqrt(5.0))  # golden angle in radians
     theta = np.arange(sample_num) * phi
-    pos = center + radius * np.stack([np.cos(theta), np.sin(theta), theta * 0], axis=-1)
+    pos = np.array(center) + radius * np.stack(
+        [np.cos(theta), np.sin(theta), theta * 0], axis=-1
+    )
     return pos
 
 
@@ -34,18 +36,18 @@ def camera_view_matrix(
     sample_num,
     pos,
     pos_noise=0,
-    lookat=np.array([0, 0, 0.0]),
+    lookat=[0, 0, 0.0],
     lookat_noise=0,
     up=None,
     up_noise=0,
     **kwargs,
 ):
-    pos = pos + pos_noise * (np.random.random((sample_num, 3)) - 0.5)
-    lookat = lookat + lookat_noise * (np.random.random((sample_num, 3)) - 0.5)
+    pos = np.array(pos) + pos_noise * (np.random.random((sample_num, 3)) - 0.5)
+    lookat = np.array(lookat) + lookat_noise * (np.random.random((sample_num, 3)) - 0.5)
     front = np_normalize(lookat - pos)
 
     while 1:
-        up = up if up is not None else np.random.randn(sample_num, 3)
+        up = np.array(up) if up is not None else np.random.randn(sample_num, 3)
         up = np_normalize(up + up_noise * (np.random.random((sample_num, 3)) - 0.5))
         up = up - np.sum(up * front, axis=-1, keepdims=True) * front
         up = np_normalize(up)
@@ -269,10 +271,15 @@ def batch_warp_render(configs, scene_cfg_path_lst, gpu_id):
                 if conti_flag:
                     continue
 
-            obj_name = scene_cfg["task"]["obj_name"]
             obj_mesh = scene_cfg2mesh(scene_cfg, scene_cfg_path)
-            scene_cfg["camera"]["sample_num"] = batch
-            camera_view_matrix = get_camera_matrix(scene_cfg["camera"])
+            camera_cfg = None
+            for camera_name, ccc in func_config["camera"].items():
+                if camera_name in scene_cfg["scene_id"]:
+                    camera_cfg = dict(ccc)
+                    break
+            assert camera_cfg is not None
+            camera_cfg["sample_num"] = batch
+            camera_view_matrix = get_camera_matrix(camera_cfg)
 
             view_matrix = renderer.render(obj_mesh, camera_view_matrix)
 

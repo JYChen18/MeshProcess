@@ -8,3 +8,18 @@ save_path: ${data.output_vision_template}
 save_pc: True
 save_rgb: False
 save_depth: False
+
+camera:
+  floating:
+    type: spherical
+    radius: 1.0
+    pos_noise: 0.1
+    lookat_noise: 0.1
+  tabletop:
+    type: circular_zaxis
+    radius: 0.8
+    center: [0, 0, 0.8]
+    up: [0, 0, 1.0]
+    pos_noise: 0.1
+    lookat_noise: 0.1
+    up_noise: 0.2
