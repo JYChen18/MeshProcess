@@ -1,7 +1,6 @@
-gpu_lst: [0,1,2,3]
+gpu_lst: [1,2,3]
 thread_per_gpu: 10
 
-scene_cfg_path: ${data.output_template}/scene_cfg/**/**.npy
 max_point_num: 4096
 
 save_path: ${data.output_vision_template}
@@ -15,11 +14,11 @@ camera:
     radius: 1.0
     pos_noise: 0.1
     lookat_noise: 0.1
-  tabletop:
+  tabletop_ur10e:
     type: circular_zaxis
     radius: 0.8
-    center: [0, 0, 0.8]
+    center: [0.75, 0, 0.8]
     up: [0, 0, 1.0]
     pos_noise: 0.1
-    lookat_noise: 0.1
+    lookat_noise: 0.03
     up_noise: 0.2

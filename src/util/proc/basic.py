@@ -109,7 +109,7 @@ def remove_input(config):
 
 
 @task_wrapper
-def export_scene_cfg(config):
+def export_tabletop_scene_cfg(config):
     (
         input_path,
         output_path,
@@ -119,7 +119,7 @@ def export_scene_cfg(config):
         xml_path,
         urdf_path,
         scale_lst,
-        obj_mass,
+        pose_cfg,
     ) = (
         config["input_path"],
         config["output_path"],
@@ -129,17 +129,86 @@ def export_scene_cfg(config):
         config["xml_path"],
         config["urdf_path"],
         config["scale_lst"],
-        config["obj_mass"],
+        config["pose_cfg"],
     )
     pose_lst = load_json(input_path)
 
     for scale in scale_lst:
-        save_path = os.path.join(
-            os.path.dirname(output_path),
-            "floating",
-            f"scale{str(int(scale*100)).zfill(3)}",
-        )
-        obj_info = load_json(info_path)
+        scale_name = f"scale{str(int(scale*100)).zfill(3)}"
+        for i, pose in enumerate(pose_lst):
+            pose_name = f"pose{str(i).zfill(3)}"
+            for j in range(pose_cfg["repeat"]):
+                save_path = os.path.join(output_path, f"{scale_name}_{pose_name}_{j}")
+
+                scaled_pose = np.array(pose)
+                scaled_pose[:3] *= scale
+                scaled_pose[:3] += np.array(pose_cfg["t"]) + np.array(
+                    pose_cfg["noise"]
+                ) * (np.random.rand(3) - 0.5)
+
+                scene_cfg = {
+                    "scene": {
+                        obj_id: {
+                            "type": "rigid_object",
+                            "file_path": os.path.relpath(
+                                file_path, os.path.dirname(save_path)
+                            ),
+                            "xml_path": os.path.relpath(
+                                xml_path, os.path.dirname(save_path)
+                            ),
+                            "urdf_path": os.path.relpath(
+                                urdf_path, os.path.dirname(save_path)
+                            ),
+                            "info_path": os.path.relpath(
+                                info_path, os.path.dirname(save_path)
+                            ),
+                            "scale": np.array([scale, scale, scale]),
+                            "pose": scaled_pose,
+                        },
+                        "table": {
+                            "type": "plane",
+                            "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
+                            "size": np.array([0.0, 0, 1]),
+                        },
+                    },
+                    "scene_id": obj_id + save_path.split(obj_id)[1],
+                    "task": {
+                        "type": "slide",
+                        "obj_name": obj_id,
+                        "axis": np.array([0.0, 0, 1]),
+                        "distance": 0.1,
+                    },
+                }
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                np.save(save_path, scene_cfg)
+
+    return
+
+
+@task_wrapper
+def export_floating_scene_cfg(config):
+    (
+        input_path,
+        output_path,
+        obj_id,
+        info_path,
+        file_path,
+        xml_path,
+        urdf_path,
+        scale_lst,
+    ) = (
+        config["input_path"],
+        config["output_path"],
+        config["obj_id"],
+        config["info_path"],
+        config["file_path"],
+        config["xml_path"],
+        config["urdf_path"],
+        config["scale_lst"],
+    )
+
+    for scale in scale_lst:
+        save_path = os.path.join(output_path, f"scale{str(int(scale*100)).zfill(3)}")
         scene_cfg = {
             "scene": {
                 obj_id: {
@@ -147,15 +216,12 @@ def export_scene_cfg(config):
                     "file_path": os.path.relpath(file_path, os.path.dirname(save_path)),
                     "xml_path": os.path.relpath(xml_path, os.path.dirname(save_path)),
                     "urdf_path": os.path.relpath(urdf_path, os.path.dirname(save_path)),
+                    "info_path": os.path.relpath(info_path, os.path.dirname(save_path)),
                     "scale": np.array([scale, scale, scale]),
                     "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
-                    "mass": obj_mass,
-                    "volume": obj_info["mass"]
-                    / obj_info["density"]
-                    * (scale / obj_info["scale"]) ** 3,
                 }
             },
-            "scene_id": f"{obj_id}/floating/scale{str(int(scale*100)).zfill(3)}",
+            "scene_id": obj_id + save_path.split(obj_id)[1],
             "task": {
                 "type": "force_closure",
                 "obj_name": obj_id,
@@ -163,32 +229,4 @@ def export_scene_cfg(config):
         }
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         np.save(save_path, scene_cfg)
-
-        scene_cfg["scene"]["table"] = {
-            "type": "plane",
-            "pose": np.array([0.0, 0, 0, 1, 0, 0, 0]),
-            "size": np.array([0.0, 0, 1]),
-        }
-        scene_cfg["task"] = {
-            "type": "slide",
-            "obj_name": obj_id,
-            "axis": np.array([0.0, 0, 1]),
-            "distance": 0.1,
-        }
-
-        for i, pose in enumerate(pose_lst):
-            scaled_pose = np.array(pose)
-            scaled_pose[:3] *= scale
-            scene_cfg["scene"][obj_id]["pose"] = scaled_pose
-            scene_cfg["scene_id"] = (
-                f"{obj_id}/tabletop/scale{str(int(scale*100)).zfill(3)}/pose{str(i).zfill(3)}"
-            )
-
-            save_path2 = os.path.join(
-                os.path.dirname(output_path),
-                "tabletop",
-                f"pose{str(i).zfill(3)}_scale{str(int(scale*100)).zfill(3)}",
-            )
-            os.makedirs(os.path.dirname(save_path2), exist_ok=True)
-            np.save(save_path2, scene_cfg)
     return

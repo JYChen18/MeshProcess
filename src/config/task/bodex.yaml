@@ -58,7 +58,3 @@
   input_path: ${data.output_template}/mesh/simplified.obj
   output_path: ${data.output_template}/info/simplified.json
 
-1-get_complete_pc: 
-  input_path: ${data.output_template}/mesh/simplified.obj
-  output_path: ${data.output_vision_template}/complete_point_cloud.npy
-  point_num: 4096

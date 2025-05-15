@@ -59,17 +59,7 @@
   input_path: ${data.output_template}/mesh/simplified.obj
   output_path: ${data.output_template}/info/simplified.json
 
-1-get_complete_pc: 
-  input_path: ${data.output_template}/mesh/simplified.obj
-  output_path: ${data.output_vision_template}/complete_point_cloud.npy
-  point_num: 4096
-
-1-export_scene_cfg:
-  input_path: ${data.output_template}/info/tabletop_pose.json
-  output_path: ${data.output_template}/scene_cfg/avoid_skip.txt
-  info_path: ${data.output_template}/info/simplified.json
-  file_path: ${data.output_template}/mesh/simplified.obj
-  xml_path: ${data.output_template}/urdf/coacd.xml
-  urdf_path: ${data.output_template}/urdf/coacd.urdf
-  scale_lst: [0.05, 0.08, 0.11, 0.14, 0.17, 0.20]
-  obj_mass: 0.1 # unit: kg
+# 1-get_complete_pc: 
+#   input_path: ${data.output_template}/mesh/simplified.obj
+#   output_path: ${data.output_template}/complete_point_cloud.npy
+#   point_num: 4096

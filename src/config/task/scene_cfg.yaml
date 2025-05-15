@@ -1,0 +1,21 @@
+1-export_floating_scene_cfg:
+  input_path: ${data.output_template}/info/tabletop_pose.json
+  output_path: ${data.output_scenecfg_template}/floating
+  info_path: ${data.output_template}/info/simplified.json
+  file_path: ${data.output_template}/mesh/simplified.obj
+  xml_path: ${data.output_template}/urdf/coacd.xml
+  urdf_path: ${data.output_template}/urdf/coacd.urdf
+  scale_lst: [0.06, 0.08, 0.10, 0.12]
+
+1-export_tabletop_scene_cfg:
+  input_path: ${data.output_template}/info/tabletop_pose.json
+  output_path: ${data.output_scenecfg_template}/tabletop_ur10e
+  info_path: ${data.output_template}/info/simplified.json
+  file_path: ${data.output_template}/mesh/simplified.obj
+  xml_path: ${data.output_template}/urdf/coacd.xml
+  urdf_path: ${data.output_template}/urdf/coacd.urdf
+  scale_lst: [0.06, 0.08, 0.10, 0.12]
+  pose_cfg:
+    repeat: 1
+    t: [0.75, 0., 0]
+    noise: [0.1, 0.1, 0]

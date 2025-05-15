@@ -17,7 +17,9 @@ def func_render(cfg):
     )
 
     gpu_lst = list(cfg.func.gpu_lst) * cfg.func.thread_per_gpu
-    all_scene_lst = glob(cfg.func.scene_cfg_path, recursive=True)
+    all_scene_lst = glob(
+        os.path.join(cfg.data.output_scenecfg_template, "**.npy"), recursive=True
+    )
     all_scene_num = len(all_scene_lst)
     scene_num_lst = np.array([all_scene_num // len(gpu_lst)] * len(gpu_lst))
     scene_num_lst[: (all_scene_num % len(gpu_lst))] += 1
