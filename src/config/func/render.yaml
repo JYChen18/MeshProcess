@@ -20,5 +20,6 @@ camera:
     center: [0.75, 0, 0.8]
     up: [0, 0, 1.0]
     pos_noise: 0.1
-    lookat_noise: 0.03
+    lookat: [0.75, 0, 0]
+    lookat_noise: 0.1
     up_noise: 0.2
